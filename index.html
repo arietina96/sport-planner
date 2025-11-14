@@ -14,15 +14,12 @@
             --color-text-dark: #6F4E4E; /* Testo Marrone/Rosa per morbidezza */
         }
         
-        /* SFONDO GLITTER/KAWAII - Pattern ripetuto con i colori pastello */
+        /* SFONDO GLITTER/KAWAII - Metodo stabile con immagine per GitHub */
         body {
             background-color: var(--color-pastel-green) !important;
-            background-image: 
-                /* Strato 1: Glitter/Dots sottili in Rosa Antico */
-                radial-gradient(var(--color-rose-antico) 10%, transparent 10%),
-                /* Strato 2: Leggere Strice/Checkers in Verde Pastello */
-                repeating-linear-gradient(45deg, var(--color-pastel-green) 0, var(--color-pastel-green) 1px, transparent 1px, transparent 8px);
-            background-size: 15px 15px, 10px 10px;
+            background-image: url('kawaii_pattern.png'); /* Pattern immagine ripetuto per stabilità */
+            background-repeat: repeat; /* Deve ripetersi per creare la texture */
+            background-size: 15px 15px; /* Una dimensione di ripetizione tipica (come l'originale) */
             color: var(--color-text-dark); 
         }
 
@@ -121,9 +118,11 @@
     <div class="container max-w-4xl mx-auto p-6 sm:p-10 rounded-xl shadow-2xl" 
          style="background-color: #FFFAFA; border: 3px solid var(--color-rose-antico); box-shadow: 0 10px 15px -3px rgba(170, 130, 130, 0.3), 0 4px 6px -2px rgba(170, 130, 130, 0.15) !important;">
          
-        <h1 class="text-4xl font-extrabold text-center mb-8" style="color: var(--color-rose-accent) !important;">Pianificatore Sportivo Giornaliero</h1>
+        <div class="flex flex-col items-center justify-center mb-8">
+            <img src="image_c095aa.png" alt="Bambino Cartoon su Tapis Roulant" class="w-24 h-24 sm:w-32 sm:h-32 object-contain mb-4"> 
+            <h1 class="text-4xl font-extrabold text-center" style="color: var(--color-rose-accent) !important;">Pianificatore Sportivo Giornaliero</h1>
+        </div>
         <p class="text-center text-gray-500 mb-6">Organizza la tua giornata combinando allenamento, pause fisse (pasti) e pause attive.</p>
-
         <div id="input-group" class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-lg mb-8 shadow-inner" 
              style="background-color: #FEEAEA; border: 1px solid var(--color-rose-antico);">
             <div class="md:col-span-1">

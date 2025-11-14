@@ -280,12 +280,13 @@
         let breakList = []; 
         const MEAL_NAMES = ['colazione', 'pranzo', 'merenda', 'cena'];
 
-        // !!! CREDENZIALI JSONBIN.io AGGIORNATE !!!
-        // Master Key per il caricamento (Master Key fornita dall'utente nell'ultimo messaggio)
-        // ORA USATA ANCHE PER IL SALVATAGGIO (PUT) per aggirare i problemi di Access Key su Bin privati.
-        const MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; 
-        // Access Key (NON USATA PER SALVATAGGIO IN QUESTA VERSIONE, USIAMO LA MASTER KEY)
-        const ACCESS_KEY = "$2a$10$2GaQnKry4T1M.Wu0pc0Gberwzt6H2lPGEh2Sx5Mh9tA/1M3vvDEYK";
+        // !!! MASTER KEY AGGIORNATA DALL'UTENTE !!!
+        // Master Key per caricamento (GET) e salvataggio (PUT).
+        // Assicurati che il BIN '6917b563d0ea881f40e8f68b' sia impostato come PRIVATE su JSONBin.io.
+        const MASTER_KEY = "$2a$10$avePEI5Kpr4GDDOhUDubruQ7Z0S6ASlQZqemR4prmv5e2hluVJaM"; 
+        
+        // La vecchia Access Key non è più necessaria.
+        // const ACCESS_KEY = "CHIAVE NON USATA";
         const BIN_ID = "6917b563d0ea881f40e8f68b";         
         // L'endpoint completo dove salvare i dati
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`; 
@@ -409,10 +410,10 @@
          */
         async function saveSchedule() {
             try {
-                // Se BIN_ID non è stato inserito, blocca e dai un errore specifico
-                if (BIN_ID === "INSERISCI_QUI_IL_NUOVO_BIN_ID_CREATO") {
-                    // Non mostrare l'errore qui, perché loadSchedule lo gestisce all'avvio
-                    return;
+                // Se la chiave è ancora il placeholder, avvisa l'utente e blocca
+                if (MASTER_KEY === "INSERISCI_QUI_LA_NUOVA_MASTER_KEY") {
+                     showMessage("ERRORE: Devi prima inserire la tua nuova Master Key nel codice!", 'error');
+                     return;
                 }
                 
                 const currentInputs = collectAllInputs();
@@ -424,7 +425,7 @@
                     method: 'PUT', // PUT sovrascrive il contenuto del bin
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY // *** ORA USIAMO X-Master-Key PER IL SALVATAGGIO ***
+                        'X-Master-Key': MASTER_KEY // *** USA SOLO LA MASTER KEY PER MASSIMA POTENZA ***
                     },
                     body: JSON.stringify(currentInputs)
                 });
@@ -432,12 +433,14 @@
                 if (response.ok) {
                    console.log("Dati salvati su JSONBin con successo.");
                 } else {
-                   showMessage("Errore salvataggio Cloud. Controlla Master Key e BIN ID. ASSICURATI CHE IL BIN SIA PRIVATE!", 'error');
-                   console.error("Errore risposta JSONBin:", response.status, await response.text());
+                   // Se il salvataggio fallisce qui, la chiave è errata o il BIN è Public
+                   const errorDetails = await response.text();
+                   showMessage(`ERRORE SALVATAGGIO CLOUD. (Stato: ${response.status}). Causa probabile: Master Key ERRATA o BIN NON PRIVATO.`, 'error');
+                   console.error("Errore risposta JSONBin:", response.status, errorDetails);
                 }
                 
             } catch (error) {
-                showMessage("Errore nel salvataggio. Controlla la connessione o l'API Key.", 'error');
+                showMessage("Errore grave nel salvataggio. Controlla la connessione o l'API Key.", 'error');
                 console.error("Errore fetch salvataggio:", error);
             }
         }
@@ -449,17 +452,14 @@
             const date = document.getElementById('scheduleDate').value;
 
             try {
-                // Se BIN_ID non è stato inserito, salta il Cloud
-                 if (BIN_ID === "6917b563d0ea881f40e8f68b") {
-                    // L'ID è corretto, non mostrare l'errore di placeholder
-                 } else {
-                    showMessage("Modalità locale: Inserisci il tuo BIN ID per attivare il Cloud Sync.", 'warning', 4000);
-                    // Procede comunque con i default se il BIN ID non è corretto
+                // Se la chiave è ancora il placeholder, avvisa l'utente e usa i default
+                if (MASTER_KEY === "INSERISCI_QUI_LA_NUOVA_MASTER_KEY") {
+                    showMessage("Modalità locale: Inserisci la tua Master Key nel codice per attivare il Cloud Sync.", 'warning', 4000);
                     breakList = [];
                     renderBreaks();
                     calculateSchedule();
                     return; 
-                 }
+                }
                 
                 // Ottiene la versione più recente del bin
                 const response = await fetch(JSONBIN_URL + "/latest", {
@@ -472,7 +472,10 @@
 
                 if (!response.ok) {
                     const errorText = await response.text(); 
-                    throw new Error(`Risposta non OK (${response.status}): ${errorText.substring(0, 100)}...`);
+                    // Mostra errore solo se non è un 404/400 (normale al primo avvio)
+                    if (response.status !== 404 && response.status !== 400) {
+                        throw new Error(`Risposta non OK (${response.status}): ${errorText.substring(0, 100)}...`);
+                    }
                 }
 
                 const jsonResponse = await response.json();
@@ -500,7 +503,6 @@
                     } else {
                          // Se la data è diversa, usiamo solo i dati di default o i dati attuali
                         showMessage(`Dati Cloud trovati, ma erano per il ${data.currentDate}. Caricamento programma predefinito per il ${date}.`, 'warning', 5000);
-                         // NON resetto la breakList in questo caso, la lascio come è nell'UI
                     }
 
                 } else {
@@ -517,7 +519,7 @@
                 calculateSchedule(); 
                 
             } catch (error) {
-                showMessage("Errore nel caricamento Cloud. Controlla Master Key e BIN ID. (Codice errore 404 o 400 è normale al primo avvio)", 'error', 7000);
+                showMessage("Errore nel caricamento Cloud. Controlla Master Key e BIN ID.", 'error', 7000);
                 console.error("Errore fetch caricamento:", error);
                 // In caso di fallimento, carica comunque i dati di default
                 renderBreaks();

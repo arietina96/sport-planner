@@ -230,6 +230,17 @@
             </div>
         </div>
 
+        <div class="flex justify-between gap-4 mb-4">
+            <button onclick="saveSchedule(); showMessage('Dati salvati sul Cloud!', 'success', 3000);" class="w-1/2 font-bold py-3 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01]"
+                style="background-color: var(--color-pastel-green); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
+                💾 Salva su Cloud
+            </button>
+            <button onclick="loadSchedule();" class="w-1/2 font-bold py-3 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01]"
+                style="background-color: var(--color-rose-antico); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
+                🔄 Carica da Cloud
+            </button>
+        </div>
+
         <button onclick="calculateSchedule()" id="calculateButton" class="w-full font-bold py-4 rounded-xl text-xl shadow-lg transition duration-300 transform hover:scale-[1.01]"
                  style="background-color: var(--color-rose-accent); color: white;">
             Calcola Programma

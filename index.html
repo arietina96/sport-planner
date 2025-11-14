@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pianificatore Sportivo</title>
-    
-    <link rel="apple-touch-icon" href="Screenshot_14-11-2025_231232_www.bing.com.jpeg"> 
-    <link rel="icon" href="Screenshot_14-11-2025_231232_www.bing.com.jpeg">
-    <meta name="apple-mobile-web-app-title" content="Sport Kawaii">
-    <meta name="apple-mobile-web-app-capable" content="yes"> <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* NUOVI COLORI KAWAII E VARIABILI */
         :root {
@@ -247,21 +243,6 @@
         
         <div id="action-buttons" class="mt-6 flex flex-col sm:flex-row justify-center gap-4 hidden">
             
-            <button onclick="exportData()" id="exportButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
-                    style="background-color: #fce4ec; color: var(--color-text-dark); border: 2px solid #D8A7A7;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M8 5a2 2 0 00-2 2v2a2 2 0 002 2h4a2 2 0 002-2V7a2 2 0 00-2-2H8zM6 7a4 4 0 014-4h.01a4 4 0 014 4v2a4 4 0 01-4 4H8a4 4 0 01-4-4V7zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-                </svg>
-                Esporta Dati (Copia)
-            </button>
-            <button onclick="importData()" id="importButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
-                    style="background-color: #F0F4C3; color: var(--color-text-dark); border: 2px solid #D8A7A7;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-7-9a1 1 0 000 2h4.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414L7.586 9H3z" clip-rule="evenodd" />
-                </svg>
-                Importa Dati (Incolla)
-            </button>
-            
             <button onclick="printSchedule()" id="printButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
                     style="background-color: var(--color-pastel-green); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -283,17 +264,18 @@
     </div>
 
     <script>
-        // Variabili Globali
-        let breakList = []; // Array di oggetti pausa attiva: { description, start: "HH:MM", duration: minuti_totali, type: 'active' }
+        
+        // --- 1. CONFIGURAZIONE JSONBIN.io ---
+        let breakList = []; 
         const MEAL_NAMES = ['colazione', 'pranzo', 'merenda', 'cena'];
-        // Chiave unica per l'archiviazione
-        const APP_STORAGE_KEY = 'sportPlannerData'; 
 
+        // !!! CREDENZIALI JSONBIN.io FINALI E CORRETTE !!!
+        const MASTER_KEY = "$2a$10$avePEI5Kpr4GDDOhUDubruQ7Z0S6ASlQZqemR4prmv5e2hluVJaM"; 
+        const BIN_ID = "6917b563d0ea881f40e8f68b";         
+        // L'endpoint completo dove salvare i dati
+        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`; 
+        
         // --- Funzioni di Utilità UI (Gestione Messaggi) ---
-
-        /**
-         * Mostra un messaggio di notifica (sostituisce alert()).
-         */
         function showMessage(message, type = 'warning', duration = 4000) {
             const box = document.getElementById('messageBox');
             if (!box) return; 
@@ -312,21 +294,15 @@
             tempDiv.innerHTML = messageHtml;
             
             const messageElement = tempDiv.querySelector('div'); 
-
-            if (!messageElement) {
-                console.error("Errore: Impossibile creare l'elemento del messaggio.");
-                return;
-            }
+            if (!messageElement) return;
 
             box.appendChild(messageElement);
 
-            // Animazione di ingresso
             setTimeout(() => {
                 messageElement.style.opacity = '1'; 
                 messageElement.style.transform = 'translateY(0)';
             }, 10);
 
-            // Animazione di uscita e rimozione
             setTimeout(() => {
                 messageElement.style.opacity = '0';
                 messageElement.style.transform = 'translateY(20px)';
@@ -339,19 +315,12 @@
         }
 
         // --- Utilità per il Tempo ---
-
-        /**
-         * Converte un orario HH:MM in minuti totali dal giorno (es. 07:30 -> 450).
-         */
         function timeToMinutes(timeStr) {
             if (!timeStr) return 0;
             const [h, m] = timeStr.split(':').map(Number);
             return (h * 60) + m;
         }
 
-        /**
-         * Converte i minuti totali dal giorno in un orario HH:MM.
-         */
         function minutesToTime(totalMinutes) {
             const minutesInDay = 24 * 60;
             const correctedMinutes = totalMinutes % minutesInDay;
@@ -364,9 +333,6 @@
             return `${h}:${m}`;
         }
 
-        /**
-         * Formatta una durata in minuti in ore e minuti.
-         */
         function formatMinutesToHours(totalMinutes) {
             if (totalMinutes <= 0) return "0 minuti";
             
@@ -388,7 +354,7 @@
             return parts[0] || "0 minuti";
         }
         
-        // --- Gestione Stato (LocalStorage) ---
+        // --- 2. Gestione Stato Cloud (JSONBin.io) ---
 
         /**
          * Raccoglie tutti i dati di input per il salvataggio.
@@ -412,6 +378,8 @@
             });
             
             return {
+                // Salviamo la data attuale per coerenza tra dispositivi
+                currentDate: document.getElementById('scheduleDate').value,
                 totalDurationHours,
                 totalDurationMinutes,
                 startTime,
@@ -422,70 +390,128 @@
         }
 
         /**
-         * Salva tutti i dati nel localStorage per la data.
+         * Salva tutti i dati su JSONBin.io (sovrascrive il contenuto del bin).
          */
-        function saveSchedule(date) {
+        async function saveSchedule() {
             try {
-                const allData = JSON.parse(localStorage.getItem(APP_STORAGE_KEY) || '{}');
+                // Se BIN_ID non è stato inserito, blocca e dai un errore specifico
+                if (BIN_ID === "INSERISCI_QUI_IL_NUOVO_BIN_ID_CREATO") {
+                    // Non mostrare l'errore qui, perché loadSchedule lo gestisce all'avvio
+                    return;
+                }
+                
                 const currentInputs = collectAllInputs();
                 
                 // Ordina le pause attive per orario di inizio prima di salvare
                 currentInputs.activeBreaks.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
 
-                allData[date] = currentInputs;
-                localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(allData));
+                const response = await fetch(JSONBIN_URL, {
+                    method: 'PUT', // PUT sovrascrive il contenuto del bin
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY // Chiave necessaria per la scrittura
+                    },
+                    body: JSON.stringify(currentInputs)
+                });
+                
+                if (response.ok) {
+                   console.log("Dati salvati su JSONBin con successo.");
+                } else {
+                   showMessage("Errore salvataggio Cloud. Controlla Master Key e BIN ID.", 'error');
+                   console.error("Errore risposta JSONBin:", response.status, await response.text());
+                }
+                
             } catch (error) {
-                console.error("Errore nel salvataggio dei dati:", error);
+                showMessage("Errore nel salvataggio. Controlla la connessione o l'API Key.", 'error');
+                console.error("Errore fetch salvataggio:", error);
             }
         }
 
         /**
-         * Carica i dati per la data selezionata.
+         * Carica i dati da JSONBin.io e popola i campi.
          */
-        function loadSchedule() {
+        async function loadSchedule() {
             const date = document.getElementById('scheduleDate').value;
+
             try {
-                const allData = JSON.parse(localStorage.getItem(APP_STORAGE_KEY) || '{}');
-                const data = allData[date];
+                // Se BIN_ID non è stato inserito, salta il Cloud
+                 if (BIN_ID === "6917b563d0ea881f40e8f68b") {
+                    // L'ID è corretto, non mostrare l'errore di placeholder
+                 } else {
+                    showMessage("Modalità locale: Inserisci il tuo BIN ID per attivare il Cloud Sync.", 'warning', 4000);
+                    // Procede comunque con i default se il BIN ID non è corretto
+                    breakList = [];
+                    renderBreaks();
+                    calculateSchedule();
+                    return; 
+                 }
+                
+                // Ottiene la versione più recente del bin
+                const response = await fetch(JSONBIN_URL + "/latest", {
+                    method: 'GET',
+                    headers: {
+                        // Master Key è necessaria qui per Bin privati
+                        'X-Master-Key': MASTER_KEY 
+                    }
+                });
 
-                if (data) {
-                    document.getElementById('totalDurationHours').value = data.totalDurationHours ?? 3;
-                    document.getElementById('totalDurationMinutes').value = data.totalDurationMinutes ?? 0;
-                    document.getElementById('startTime').value = data.startTime ?? ''; // Rimosso default fisso
-                    document.getElementById('endTime').value = data.endTime ?? ''; // Rimosso default fisso
-                    breakList = data.activeBreaks || [];
+                if (!response.ok) {
+                    const errorText = await response.text(); 
+                    throw new Error(`Risposta non OK (${response.status}): ${errorText.substring(0, 100)}...`);
+                }
 
-                    // Carica i pasti fissi
-                    MEAL_NAMES.forEach(meal => {
-                        if (data.fixedBreaks && data.fixedBreaks[meal]) {
-                            document.getElementById(`${meal}Start`).value = data.fixedBreaks[meal].start;
-                            document.getElementById(`${meal}End`).value = data.fixedBreaks[meal].end;
-                        }
-                    });
+                const jsonResponse = await response.json();
+                const data = jsonResponse.record; // Il contenuto utile è sotto la chiave 'record'
+
+                if (data && Object.keys(data).length > 0) {
+                    
+                    // Solo se la data del salvataggio è la stessa di quella selezionata
+                    if (data.currentDate === date) {
+                        document.getElementById('totalDurationHours').value = data.totalDurationHours ?? 3;
+                        document.getElementById('totalDurationMinutes').value = data.totalDurationMinutes ?? 0;
+                        document.getElementById('startTime').value = data.startTime ?? '';
+                        document.getElementById('endTime').value = data.endTime ?? '';
+                        breakList = data.activeBreaks || [];
+                        
+                        // Carica i pasti fissi
+                        MEAL_NAMES.forEach(meal => {
+                            if (data.fixedBreaks && data.fixedBreaks[meal]) {
+                                document.getElementById(`${meal}Start`).value = data.fixedBreaks[meal].start;
+                                document.getElementById(`${meal}End`).value = data.fixedBreaks[meal].end;
+                            }
+                        });
+                        showMessage(`Dati del ${date} caricati dal Cloud!`, 'info', 3000);
+
+                    } else {
+                         // Se la data è diversa, usiamo solo i dati di default o i dati attuali
+                        showMessage(`Dati Cloud trovati, ma erano per il ${data.currentDate}. Caricamento programma predefinito per il ${date}.`, 'warning', 5000);
+                         // NON resetto la breakList in questo caso, la lascio come è nell'UI
+                    }
 
                 } else {
-                    // Reset ai valori di default se non ci sono dati
+                    // Reset ai valori di default se non ci sono dati Cloud
                     breakList = [];
                     document.getElementById('totalDurationHours').value = 3;
                     document.getElementById('totalDurationMinutes').value = 0;
                     document.getElementById('startTime').value = ''; 
                     document.getElementById('endTime').value = '';
+                    showMessage(`Nessun dato Cloud trovato. Caricamento default.`, 'warning', 3000);
                 }
                 
                 renderBreaks();
-                calculateSchedule(); // Ricalcola ad ogni caricamento per avere la tabella aggiornata
+                calculateSchedule(); 
+                
             } catch (error) {
-                console.error("Errore nel caricamento dei dati:", error);
-                breakList = [];
+                showMessage("Errore nel caricamento Cloud. Controlla Master Key e BIN ID. (Codice errore 404 o 400 è normale al primo avvio)", 'error', 7000);
+                console.error("Errore fetch caricamento:", error);
+                // In caso di fallimento, carica comunque i dati di default
                 renderBreaks();
+                calculateSchedule();
             }
         }
-
+        
         // --- Gestione Interfaccia Pause Attive ---
 
-        /**
-         * Aggiunge una nuova pausa attiva all'elenco.
-         */
         function addBreak() {
             const descriptionInput = document.getElementById('breakDescription');
             const durationHoursInput = document.getElementById('breakDurationHours');
@@ -515,34 +541,29 @@
                 type: 'active'
             });
             
+            // Ordina sempre dopo l'aggiunta
             breakList.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
 
             descriptionInput.value = '';
             durationHoursInput.value = 0;
             durationMinutesInput.value = 30;
             
-            saveSchedule(document.getElementById('scheduleDate').value);
+            saveSchedule(); // SALVATAGGIO CLOUD AUTOMATICO
             renderBreaks();
             calculateSchedule();
             showMessage(`Pausa "${description}" aggiunta con successo.`, 'success');
         }
 
-        /**
-         * Rimuove una pausa attiva in base all'indice.
-         */
         function removeBreak(index) {
             const removedDescription = breakList[index].description;
             breakList.splice(index, 1);
             
-            saveSchedule(document.getElementById('scheduleDate').value);
+            saveSchedule(); // SALVATAGGIO CLOUD AUTOMATICO
             renderBreaks();
             calculateSchedule();
             showMessage(`Pausa "${removedDescription}" rimossa.`, 'success');
         }
 
-        /**
-         * Aggiorna la lista delle pause attive nell'interfaccia.
-         */
         function renderBreaks() {
             const container = document.getElementById('currentBreaks');
             let html = '';
@@ -570,11 +591,8 @@
             container.innerHTML = html;
         }
 
-        // --- FUNZIONI DI STAMPA, CONDIVISIONE E SINCRONIZZAZIONE ---
+        // --- NUOVE FUNZIONI DI STAMPA E CONDIVISIONE ---
 
-        /**
-         * Ricollega tutti gli Event Listeners dopo il ripristino dalla stampa.
-         */
         function attachEventListeners() {
              const dateInput = document.getElementById('scheduleDate');
              if (dateInput) {
@@ -590,7 +608,11 @@
              inputsToWatch.forEach(id => {
                  const element = document.getElementById(id);
                  if (element) {
-                     element.addEventListener('change', calculateSchedule);
+                     // Adesso salva sul Cloud PRIMA di ricalcolare
+                     element.addEventListener('change', () => {
+                         saveSchedule(); 
+                         calculateSchedule();
+                     });
                  }
              });
              
@@ -600,25 +622,18 @@
              }
         }
         
-        /**
-         * Stampa la sezione dei risultati o salva come PDF.
-         * Nasconde temporaneamente il resto dell'interfaccia.
-         */
         function printSchedule() {
             const resultsDiv = document.getElementById('results');
             const scheduleTable = document.querySelector('#results .session-table');
 
-            // Verifica se ci sono risultati da stampare
             if (!scheduleTable) {
                 showMessage("Prima devi calcolare il programma per poterlo stampare.", 'warning');
                 return;
             }
 
-            // 1. Prepara lo stile e il contenuto per la stampa
             const originalBody = document.body.innerHTML;
             const printContent = `<div class="print-container">
                 <style>
-                    /* Inietta stili specifici per la stampa (copiati dagli stili Kawaii per coerenza) */
                     body { 
                         background: white !important; 
                         margin: 0; 
@@ -628,7 +643,6 @@
                     }
                     h1 { color: #D8A7A7; text-align: center; font-size: 24px; margin-bottom: 20px; }
                     
-                    /* Sovrascrivi gli stili Tailwind per la tabella in stampa */
                     .session-table { 
                         width: 100%; 
                         border-collapse: collapse; 
@@ -636,7 +650,7 @@
                         font-size: 14px;
                     }
                     .session-table th, .session-table td { 
-                        border: 1px solid #888; /* Bordo più scuro per la stampa */
+                        border: 1px solid #888; 
                         padding: 8px; 
                         text-align: left; 
                     }
@@ -644,29 +658,23 @@
                     .session-table .meal { background-color: #E1F0E1 !important; } 
                     .session-table .break { background-color: #FEEAEA !important; }
                     .session-table .info { background-color: #f7f7f7 !important; }
-                    .bg-blue-100 { background-color: #FEEAEA !important; padding: 10px; border: 1px solid #ccc;} /* Stile per il riepilogo */
+                    .bg-blue-100 { background-color: #FEEAEA !important; padding: 10px; border: 1px solid #ccc;} 
+
                 </style>
                 <h1 style="color: #D8A7A7; text-align: center; font-size: 24px; margin-bottom: 20px;">Pianificatore Sportivo Giornaliero</h1>
                 ${resultsDiv.innerHTML}
             </div>`;
 
-            // 2. Sostituisce il contenuto del body con il contenuto da stampare
             document.body.innerHTML = printContent;
             
-            // 3. Avvia la stampa
             window.print();
             
-            // 4. Ripristina il contenuto originale dopo la stampa (con un piccolo ritardo)
             setTimeout(() => {
                 document.body.innerHTML = originalBody;
-                // Ricollega gli eventi dopo il ripristino
                 attachEventListeners(); 
             }, 500);
         }
         
-        /**
-         * Prepara e condivide un riassunto del programma su WhatsApp (solo testo) e SUGGERISCE lo screenshot.
-         */
         function shareOnWhatsApp() {
             const date = document.getElementById('scheduleDate').value;
             const scheduleTable = document.querySelector('#results .session-table');
@@ -676,16 +684,12 @@
                 return;
             }
             
-            // ISTRUZIONE ESPLICITA PER LO SCREENSHOT
             showMessage("✅ PER L'IMMAGINE: Fai uno screenshot di questa tabella e invialo dalla tua galleria! Ora avvio la condivisione del testo riassuntivo.", 'info', 7000); 
 
-            // Raccoglie i dati della tabella
             let summary = `*📅 Programma Sportivo del ${date} 📅*\n\n`;
             
-            // Aggiunge il riepilogo
             const summaryDiv = document.querySelector('#results > div:first-child');
             if(summaryDiv) {
-                // Estrae il testo rilevante dal riepilogo
                 const summaryText = summaryDiv.innerText.replace(/(\n{2,})/g, '\n').replace('Pianificazione vincolata', 'Vincolo').trim();
                 summary += summaryText + '\n\n';
             }
@@ -736,72 +740,6 @@
                  }, 500);
             }
         }
-        
-        /**
-         * Esporta tutti i dati di LocalStorage nell'APP_STORAGE_KEY e li copia negli appunti.
-         */
-        function exportData() {
-            const data = localStorage.getItem(APP_STORAGE_KEY);
-            
-            if (!data || data === '{}') {
-                showMessage("Nessun dato da esportare. Calcola o aggiungi delle pause per salvare il programma.", 'warning');
-                return;
-            }
-
-            // Tentativo di copiare negli appunti del dispositivo
-            navigator.clipboard.writeText(data)
-                .then(() => {
-                    showMessage("✅ Dati del programma copiati negli appunti. Incolla questo testo sul tuo altro dispositivo nella funzione Importa.", 'success', 8000);
-                })
-                .catch(err => {
-                    console.error('Errore durante la copia:', err);
-                    // Fallback per vecchi browser o se navigator.clipboard non è permesso
-                    showMessage("Errore: Impossibile copiare automaticamente. Controlla che il browser abbia i permessi o copia manualmente (il testo verrà mostrato in un popup).", 'error', 10000);
-                    // Mostra i dati con un vecchio alert per il fallback manuale
-                    alert(data);
-                });
-        }
-        
-        /**
-         * Legge i dati dagli appunti e li salva in LocalStorage.
-         */
-        function importData() {
-            // Tentativo di leggere dagli appunti del dispositivo
-            navigator.clipboard.readText()
-                .then(clipboardText => {
-                    if (!clipboardText) {
-                        showMessage("Nessun testo trovato negli appunti o permessi negati. Copia prima i dati dal PC/telefono.", 'warning');
-                        return;
-                    }
-
-                    let parsedData;
-                    try {
-                        parsedData = JSON.parse(clipboardText);
-                    } catch (e) {
-                        showMessage("I dati negli appunti non sono validi (formato errato). Assicurati di aver copiato il testo completo e corretto.", 'error');
-                        return;
-                    }
-
-                    // Assicurati che i dati siano nel formato corretto per l'app (dovrebbe essere un oggetto con chiavi data)
-                    if (typeof parsedData !== 'object' || parsedData === null || Object.keys(parsedData).length === 0) {
-                        showMessage("I dati copiati non sono riconosciuti come un programma valido. Riprova a esportare i dati corretti.", 'error');
-                        return;
-                    }
-
-                    // Sovrascrivi il LocalStorage esistente
-                    localStorage.setItem(APP_STORAGE_KEY, clipboardText);
-                    
-                    // Ricarica il programma per la data corrente con i nuovi dati
-                    loadSchedule(); 
-                    
-                    showMessage("🎉 Dati importati con successo e programma aggiornato! Ricalcola se necessario.", 'success', 8000);
-
-                })
-                .catch(err => {
-                    console.error('Errore durante la lettura degli appunti:', err);
-                    showMessage("Errore: Impossibile accedere agli appunti del sistema. Assicurati che il browser abbia i permessi di lettura.", 'error');
-                });
-        }
 
         // --- Logica di Calcolo Principale ---
 
@@ -823,7 +761,11 @@
                 return;
             }
 
-            saveSchedule(document.getElementById('scheduleDate').value);
+            // Inizializza il salvataggio sul Cloud se il calcolo non è automatico
+            // Se calculateSchedule() è chiamato da un evento change, saveSchedule è già stata chiamata. 
+            // Se è chiamato dal pulsante 'Calcola', lo chiamo qui.
+            // Lo chiamo sempre per sicurezza, è asincrono e non blocca il calcolo.
+            saveSchedule(); 
 
             // 2. Unisce e Ordina TUTTE le pause (Fisse + Attive)
             const allBreaks = [];

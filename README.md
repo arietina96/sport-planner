@@ -1,2 +1,757 @@
-# sport-planner
-tapis
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pianificatore Sportivo</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Sport Planner">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Stili Personalizzati */
+        .session-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .session-table th, .session-table td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: left;
+        }
+        .session-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+        }
+        .session-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .session-table .break {
+            background-color: #fff3cd; /* Giallo chiaro per le pause attive (es. stretching) */
+            color: #856404;
+        }
+        .session-table .meal {
+            background-color: #d1e7dd; /* Verde chiaro per i pasti (pause fisse) */
+            color: #0f5132;
+        }
+        .session-table .info {
+            background-color: #e0f7fa; /* Blu chiaro per i blocchi informativi */
+            color: #006064;
+        }
+        .session-table .break td, .session-table .meal td {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-gray-300 min-h-screen p-4 sm:p-8 font-sans">
+
+    <div class="container max-w-4xl mx-auto p-4 rounded-lg bg-blue-100 text-blue-800 shadow mb-6">
+        <h3 class="font-bold">✨ Istruzioni per iPhone/iOS ✨</h3>
+        <p class="text-sm">Per aprire questa app a schermo intero (come un'app nativa), premi il pulsante **Condividi** (il quadrato con la freccia) nel tuo browser Safari e poi seleziona **Aggiungi alla schermata Home**.</p>
+    </div>
+
+    <div class="container max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-2xl">
+        <h1 class="text-4xl font-extrabold text-blue-600 text-center mb-8">Pianificatore Sportivo Giornaliero</h1>
+        <p class="text-center text-gray-500 mb-6">Organizza la tua giornata combinando allenamento, pause fisse (pasti) e pause attive.</p>
+
+        <div id="input-group" class="grid grid-cols-1 md:grid-cols-4 gap-6 bg-blue-50 p-6 rounded-lg mb-8 shadow-inner">
+            <div class="md:col-span-1">
+                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-2">Data del Programma</label>
+                <input type="date" id="scheduleDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" required>
+            </div>
+            
+            <div class="md:col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Durata Totale Allenamento <span class="text-red-500">*</span></label>
+                <div class="flex gap-2">
+                    <input type="number" id="totalDurationHours" value="3" min="0" max="23" placeholder="Ore" class="w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" required>
+                    <input type="number" id="totalDurationMinutes" value="0" min="0" max="59" placeholder="Minuti" class="w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" required>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Tempo totale da distribuire.</p>
+            </div>
+
+            <div class="md:col-span-1">
+                <label for="startTime" class="block text-sm font-medium text-gray-700 mb-2">Ora di Inizio (Opzionale)</label>
+                <input type="time" id="startTime" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                <p class="text-xs text-gray-500 mt-1">Lascia vuoto per distribuzione libera.</p>
+            </div>
+            
+            <div class="md:col-span-1">
+                <label for="endTime" class="block text-sm font-medium text-gray-700 mb-2">Ora di Fine (Opzionale)</label>
+                <input type="time" id="endTime" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                <p class="text-xs text-gray-500 mt-1">Opzione valida solo con l'Ora di Inizio.</p>
+            </div>
+        </div>
+
+        <div class="bg-green-50 p-6 rounded-lg mb-8 border border-green-200">
+            <h2 class="text-2xl font-semibold text-green-700 mb-4">Pasti e Pause Fisse <span class="text-base font-normal">(Definisci Inizio e Fine)</span></h2>
+            
+            <div id="mealInputs" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label for="colazioneStart" class="block text-sm font-medium text-gray-700 mb-1">Colazione (Inizio)</label>
+                    <input type="time" id="colazioneStart" value="07:30" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                 <div>
+                    <label for="colazioneEnd" class="block text-sm font-medium text-gray-700 mb-1">Colazione (Fine)</label>
+                    <input type="time" id="colazioneEnd" value="08:00" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="pranzoStart" class="block text-sm font-medium text-gray-700 mb-1">Pranzo (Inizio)</label>
+                    <input type="time" id="pranzoStart" value="13:00" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="pranzoEnd" class="block text-sm font-medium text-gray-700 mb-1">Pranzo (Fine)</label>
+                    <input type="time" id="pranzoEnd" value="14:00" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="merendaStart" class="block text-sm font-medium text-gray-700 mb-1">Merenda (Inizio)</label>
+                    <input type="time" id="merendaStart" value="16:00" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                 <div>
+                    <label for="merendaEnd" class="block text-sm font-medium text-gray-700 mb-1">Merenda (Fine)</label>
+                    <input type="time" id="merendaEnd" value="16:15" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="cenaStart" class="block text-sm font-medium text-gray-700 mb-1">Cena (Inizio)</label>
+                    <input type="time" id="cenaStart" value="20:00" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="cenaEnd" class="block text-sm font-medium text-gray-700 mb-1">Cena (Fine)</label>
+                    <input type="time" id="cenaEnd" value="20:45" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+            </div>
+            <p class="text-xs text-green-700 mt-2">Le pause fisse (pasti) vengono incluse automaticamente nel programma.</p>
+        </div>
+
+        <div class="bg-yellow-50 p-6 rounded-lg mb-8 border border-yellow-200">
+            <h2 class="text-2xl font-semibold text-yellow-700 mb-4">Pause Attive Personalizzate <span class="text-base font-normal">(Riposo, Stretching, Idratazione)</span></h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4 items-end">
+                <div class="sm:col-span-1">
+                    <label for="breakDescription" class="block text-sm font-medium text-gray-700 mb-2">Descrizione</label>
+                    <input type="text" id="breakDescription" placeholder="Es. Stretching" class="w-full p-3 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div class="sm:col-span-1">
+                    <label for="breakStartTime" class="block text-sm font-medium text-gray-700 mb-2">Ora di Inizio Pausa</label>
+                    <input type="time" id="breakStartTime" value="10:00" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+
+                <div class="sm:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Durata (Minuti)</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="breakDurationHours" value="0" min="0" max="23" placeholder="Ore" class="w-1/2 p-3 border border-gray-300 rounded-lg">
+                        <input type="number" id="breakDurationMinutes" value="30" min="0" max="59" placeholder="Minuti" class="w-1/2 p-3 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                
+                <button onclick="addBreak()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 sm:col-span-1">
+                    Aggiungi Pausa Attiva
+                </button>
+            </div>
+
+            <div id="breakListContainer" class="mt-4">
+                <h3 class="text-lg font-medium text-gray-600 mb-2">Pause Attive Aggiunte:</h3>
+                <ul id="currentBreaks" class="space-y-2">
+                    <li id="noBreaksMessage" class="text-gray-400 italic">Nessuna pausa attiva aggiunta.</li>
+                </ul>
+                <p class="text-xs text-yellow-700 mt-2">Le pause devono essere inserite in ordine cronologico.</p>
+            </div>
+        </div>
+
+        <button onclick="calculateSchedule()" id="calculateButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-xl shadow-lg transition duration-300 transform hover:scale-[1.01]">
+            Calcola Programma
+        </button>
+
+        <div id="results" class="mt-10 bg-gray-50 p-6 rounded-xl shadow-inner border-t-4 border-blue-500">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Risultati della Pianificazione</h2>
+            <p class="text-gray-500 italic">Inserisci i dati e calcola il programma per visualizzare qui la tabella dettagliata.</p>
+        </div>
+        
+        <div id="messageBox" class="fixed bottom-4 right-4 z-50"></div>
+    </div>
+
+    <script>
+        // Variabili Globali
+        let breakList = []; // Array di oggetti pausa attiva: { description, start: "HH:MM", duration: minuti_totali, type: 'active' }
+        const MEAL_NAMES = ['colazione', 'pranzo', 'merenda', 'cena'];
+        const APP_STORAGE_KEY = 'sportPlannerData';
+
+        // --- Funzioni di Utilità UI (Gestione Messaggi) ---
+
+        /**
+         * Mostra un messaggio di notifica (sostituisce alert()).
+         */
+        function showMessage(message, type = 'warning') {
+            const box = document.getElementById('messageBox');
+            if (!box) return; 
+
+            let bgColor = 'bg-yellow-500';
+            if (type === 'error') bgColor = 'bg-red-500';
+            if (type === 'success') bgColor = 'bg-green-500';
+
+            const messageHtml = `<div class="${bgColor} text-white p-4 rounded-lg shadow-xl mb-3 opacity-0 transition-opacity duration-300 transform translate-y-2"
+                     role="alert" style="min-width: 250px;">
+                    ${message}
+                </div>`;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = messageHtml;
+            
+            const messageElement = tempDiv.querySelector('div'); 
+
+            if (!messageElement) {
+                console.error("Errore: Impossibile creare l'elemento del messaggio.");
+                return;
+            }
+
+            box.appendChild(messageElement);
+
+            // Animazione di ingresso
+            setTimeout(() => {
+                messageElement.style.opacity = '1'; 
+                messageElement.style.transform = 'translateY(0)';
+            }, 10);
+
+            // Animazione di uscita e rimozione
+            setTimeout(() => {
+                messageElement.style.opacity = '0';
+                messageElement.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    if (box.contains(messageElement)) {
+                       box.removeChild(messageElement);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // --- Utilità per il Tempo ---
+
+        /**
+         * Converte un orario HH:MM in minuti totali dal giorno (es. 07:30 -> 450).
+         */
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [h, m] = timeStr.split(':').map(Number);
+            return (h * 60) + m;
+        }
+
+        /**
+         * Converte i minuti totali dal giorno in un orario HH:MM.
+         */
+        function minutesToTime(totalMinutes) {
+            const minutesInDay = 24 * 60;
+            const correctedMinutes = totalMinutes % minutesInDay;
+            
+            const hours = Math.floor(correctedMinutes / 60);
+            const minutes = correctedMinutes % 60;
+            
+            const h = String(hours).padStart(2, '0');
+            const m = String(minutes).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        /**
+         * Formatta una durata in minuti in ore e minuti.
+         */
+        function formatMinutesToHours(totalMinutes) {
+            if (totalMinutes <= 0) return "0 minuti";
+            
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            let parts = [];
+
+            if (h > 0) {
+                parts.push(`${h} ${h === 1 ? 'ora' : 'ore'}`);
+            }
+
+            if (m > 0) {
+                parts.push(`${m} ${m === 1 ? 'minuto' : 'minuti'}`);
+            }
+            
+            if (parts.length === 2) {
+                return parts.join(' e ');
+            }
+            return parts[0] || "0 minuti";
+        }
+        
+        // --- Gestione Stato (LocalStorage) ---
+
+        /**
+         * Raccoglie tutti i dati di input per il salvataggio.
+         */
+        function collectAllInputs() {
+            const totalDurationHours = document.getElementById('totalDurationHours').value || 0;
+            const totalDurationMinutes = document.getElementById('totalDurationMinutes').value || 0;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            const mealsData = {};
+            MEAL_NAMES.forEach(meal => {
+                const startElement = document.getElementById(`${meal}Start`);
+                const endElement = document.getElementById(`${meal}End`);
+                if (startElement && endElement) {
+                    mealsData[meal] = {
+                        start: startElement.value,
+                        end: endElement.value
+                    };
+                }
+            });
+            
+            return {
+                totalDurationHours,
+                totalDurationMinutes,
+                startTime,
+                endTime,
+                activeBreaks: breakList,
+                fixedBreaks: mealsData
+            };
+        }
+
+        /**
+         * Salva tutti i dati nel localStorage per la data.
+         */
+        function saveSchedule(date) {
+            try {
+                const allData = JSON.parse(localStorage.getItem(APP_STORAGE_KEY) || '{}');
+                const currentInputs = collectAllInputs();
+                
+                // Ordina le pause attive per orario di inizio prima di salvare
+                currentInputs.activeBreaks.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+
+                allData[date] = currentInputs;
+                localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(allData));
+            } catch (error) {
+                console.error("Errore nel salvataggio dei dati:", error);
+            }
+        }
+
+        /**
+         * Carica i dati per la data selezionata.
+         */
+        function loadSchedule() {
+            const date = document.getElementById('scheduleDate').value;
+            try {
+                const allData = JSON.parse(localStorage.getItem(APP_STORAGE_KEY) || '{}');
+                const data = allData[date];
+
+                if (data) {
+                    document.getElementById('totalDurationHours').value = data.totalDurationHours ?? 3;
+                    document.getElementById('totalDurationMinutes').value = data.totalDurationMinutes ?? 0;
+                    document.getElementById('startTime').value = data.startTime ?? '';
+                    document.getElementById('endTime').value = data.endTime ?? '';
+                    breakList = data.activeBreaks || [];
+
+                    // Carica i pasti fissi
+                    MEAL_NAMES.forEach(meal => {
+                        if (data.fixedBreaks && data.fixedBreaks[meal]) {
+                            document.getElementById(`${meal}Start`).value = data.fixedBreaks[meal].start;
+                            document.getElementById(`${meal}End`).value = data.fixedBreaks[meal].end;
+                        }
+                    });
+
+                } else {
+                    // Reset ai valori di default se non ci sono dati
+                    breakList = [];
+                    document.getElementById('totalDurationHours').value = 3;
+                    document.getElementById('totalDurationMinutes').value = 0;
+                    document.getElementById('startTime').value = ''; 
+                    document.getElementById('endTime').value = '';
+                }
+                
+                renderBreaks();
+                calculateSchedule(); // Ricalcola ad ogni caricamento per avere la tabella aggiornata
+            } catch (error) {
+                console.error("Errore nel caricamento dei dati:", error);
+                breakList = [];
+                renderBreaks();
+            }
+        }
+
+        // --- Gestione Interfaccia Pause Attive ---
+
+        /**
+         * Aggiunge una nuova pausa attiva all'elenco.
+         */
+        function addBreak() {
+            const descriptionInput = document.getElementById('breakDescription');
+            const durationHoursInput = document.getElementById('breakDurationHours');
+            const durationMinutesInput = document.getElementById('breakDurationMinutes');
+            const startTimeInput = document.getElementById('breakStartTime');
+            
+            const description = descriptionInput.value.trim() || 'Pausa Generica';
+            const breakStartTimeStr = startTimeInput.value;
+            
+            const hours = parseInt(durationHoursInput.value, 10) || 0;
+            const minutes = parseInt(durationMinutesInput.value, 10) || 0;
+            const totalDuration = (hours * 60) + minutes;
+
+            if (totalDuration < 5) {
+                showMessage("La durata della pausa deve essere di almeno 5 minuti.", 'error');
+                return;
+            }
+            if (!breakStartTimeStr) {
+                showMessage("Inserisci l'ora di inizio della pausa (HH:MM).", 'error');
+                return;
+            }
+
+            breakList.push({ 
+                description: description, 
+                start: breakStartTimeStr, 
+                duration: totalDuration,
+                type: 'active'
+            });
+            
+            breakList.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+
+            descriptionInput.value = '';
+            durationHoursInput.value = 0;
+            durationMinutesInput.value = 30;
+            
+            saveSchedule(document.getElementById('scheduleDate').value);
+            renderBreaks();
+            calculateSchedule();
+            showMessage(`Pausa "${description}" aggiunta con successo.`, 'success');
+        }
+
+        /**
+         * Rimuove una pausa attiva in base all'indice.
+         */
+        function removeBreak(index) {
+            const removedDescription = breakList[index].description;
+            breakList.splice(index, 1);
+            
+            saveSchedule(document.getElementById('scheduleDate').value);
+            renderBreaks();
+            calculateSchedule();
+            showMessage(`Pausa "${removedDescription}" rimossa.`, 'success');
+        }
+
+        /**
+         * Aggiorna la lista delle pause attive nell'interfaccia.
+         */
+        function renderBreaks() {
+            const container = document.getElementById('currentBreaks');
+            let html = '';
+            
+            if (breakList.length === 0) {
+                 html = '<li id="noBreaksMessage" class="text-gray-400 italic">Nessuna pausa attiva aggiunta.</li>';
+            } else {
+                breakList.forEach((b, index) => {
+                    html += `
+                        <li class="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm border border-yellow-300">
+                            <span class="text-gray-800 font-medium">
+                                ${b.start} - ${b.description} 
+                                <span class="text-sm text-gray-500">(${formatMinutesToHours(b.duration)})</span>
+                            </span>
+                            <button onclick="removeBreak(${index})" class="text-red-500 hover:text-red-700 transition duration-150" aria-label="Rimuovi Pausa">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.728-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </li>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        // --- Logica di Calcolo Principale ---
+
+        function calculateSchedule() {
+            // 1. Dati di input e calcolo durata totale
+            const totalDurationHours = parseInt(document.getElementById('totalDurationHours').value, 10) || 0;
+            const totalDurationMinutes = parseInt(document.getElementById('totalDurationMinutes').value, 10) || 0;
+            let totalTrainingDuration = (totalDurationHours * 60) + totalDurationMinutes;
+            const totalInitialDuration = totalTrainingDuration; 
+
+            const startTimeStr = document.getElementById('startTime').value.trim();
+            const endTimeStr = document.getElementById('endTime').value.trim();
+            const resultsDiv = document.getElementById('results');
+            
+            if (totalTrainingDuration <= 0) {
+                 resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Per favore, inserisci una durata totale valida per l\'allenamento (maggiore di 0 minuti).</p>';
+                return;
+            }
+
+            saveSchedule(document.getElementById('scheduleDate').value);
+
+            // 2. Unisce e Ordina TUTTE le pause (Fisse + Attive)
+            const allBreaks = [];
+
+            // A. Aggiunge le pause fisse (pasti)
+            MEAL_NAMES.forEach(meal => {
+                const start = document.getElementById(`${meal}Start`).value;
+                const end = document.getElementById(`${meal}End`).value;
+                
+                if (start && end) {
+                    let startMin = timeToMinutes(start);
+                    let endMin = timeToMinutes(end);
+
+                    if (endMin <= startMin) {
+                        endMin += (24 * 60); // Supporta pasti che attraversano la mezzanotte
+                    }
+
+                    const duration = endMin - startMin;
+                    
+                    if (duration > 0) {
+                         allBreaks.push({
+                            description: meal.charAt(0).toUpperCase() + meal.slice(1), 
+                            start: start,
+                            end: end, 
+                            duration: duration,
+                            startMinutes: startMin,
+                            endMinutes: endMin,
+                            type: 'fixed' 
+                        });
+                    }
+                }
+            });
+
+            // B. Aggiunge le pause attive
+            breakList.forEach(b => {
+                const startMin = timeToMinutes(b.start);
+                const endMin = startMin + b.duration;
+                
+                allBreaks.push({
+                    description: b.description, 
+                    start: b.start,
+                    end: minutesToTime(endMin),
+                    duration: b.duration,
+                    startMinutes: startMin,
+                    endMinutes: endMin,
+                    type: 'active'
+                });
+            });
+
+            // C. Ordina cronologicamente tutte le pause per orario di inizio
+            allBreaks.sort((a, b) => a.startMinutes - b.startMinutes);
+
+            // 3. Determina la modalità di pianificazione
+            let planningMode = 'free'; // Distribuzione libera
+            let startMinutes = 0;
+            let endMinutes = 24 * 60; // Fine a mezzanotte del giorno dopo
+            let planningConstraint = ''; // Messaggio per il riepilogo
+            
+            if (startTimeStr && endTimeStr) {
+                planningMode = 'fixed_window';
+                startMinutes = timeToMinutes(startTimeStr);
+                endMinutes = timeToMinutes(endTimeStr);
+                if (endMinutes <= startMinutes) {
+                    endMinutes += (24 * 60); // Attraversamento mezzanotte
+                }
+                
+                // Limita la durata totale alla finestra temporale definita
+                const windowDuration = endMinutes - startMinutes;
+                if (totalTrainingDuration > windowDuration) {
+                    showMessage(`Attenzione: La durata richiesta (${formatMinutesToHours(totalTrainingDuration)}) è maggiore della finestra temporale (${formatMinutesToHours(windowDuration)}). Verrà schedulato solo il tempo disponibile.`, 'warning');
+                    totalTrainingDuration = windowDuration; 
+                }
+                planningConstraint = `Pianificazione vincolata dalle ${startTimeStr} alle ${endTimeStr}.`;
+
+            } else if (startTimeStr || endTimeStr) {
+                // Se solo uno è impostato, è un errore nell'input in questa modalità
+                 resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Per la pianificazione vincolata devi inserire SIA l\'Ora di Inizio che l\'Ora di Fine, oppure lasciare entrambi vuoti per la distribuzione libera.</p>';
+                return;
+            } else {
+                planningConstraint = `Pianificazione libera: l\'allenamento inizierà dopo l'ultima pausa fissa/attiva più vicina al mattino.`;
+            }
+
+            // 4. Inizializzazione pianificazione
+            const schedule = [];
+            let currentTrainingStartMinutes = startMinutes;
+            
+            // 5. Ciclo principale
+
+            // Filtra le pause per includere solo quelle che rientrano nella finestra fissa (se definita)
+            const relevantBreaks = allBreaks.filter(b => b.startMinutes < endMinutes && b.endMinutes > startMinutes);
+
+            relevantBreaks.forEach((breakItem) => {
+                const breakStartMinutes = breakItem.startMinutes;
+                const breakEndMinutes = breakItem.endMinutes;
+
+                // Trova l'inizio effettivo della pausa all'interno del programma (dopo l'ultima attività)
+                const actualBreakStart = Math.max(breakStartMinutes, currentTrainingStartMinutes);
+                
+                // Se la pausa inizia dopo la fine della finestra fissa, interrompi
+                if (breakStartMinutes >= endMinutes) return;
+
+                // Calcola la durata del blocco di allenamento (spazio tra attività)
+                let trainingDurationSpace = actualBreakStart - currentTrainingStartMinutes;
+
+                // Inserisce il blocco di allenamento (se c'è spazio e c'è ancora tempo da schedulare)
+                if (trainingDurationSpace > 0 && totalTrainingDuration > 0) {
+                    // Durata massima che possiamo mettere in questo blocco
+                    let maxBlockDuration = trainingDurationSpace;
+                    
+                    if (planningMode === 'fixed_window') {
+                        // In modalità fissa, il blocco non può superare l'Ora di Fine generale
+                        maxBlockDuration = Math.min(trainingDurationSpace, endMinutes - currentTrainingStartMinutes);
+                    }
+                    
+                    let blockDuration = Math.min(totalTrainingDuration, maxBlockDuration);
+                    
+                    if (blockDuration > 0) {
+                        const blockEndMinutes = currentTrainingStartMinutes + blockDuration;
+                        schedule.push({
+                            type: `Allenamento Blocco ${schedule.filter(i => i.type.includes('Allenamento')).length + 1}`,
+                            start: minutesToTime(currentTrainingStartMinutes),
+                            end: minutesToTime(blockEndMinutes),
+                            duration: blockDuration,
+                            classType: ''
+                        });
+                        currentTrainingStartMinutes = blockEndMinutes; 
+                        totalTrainingDuration -= blockDuration;
+                    }
+                }
+                
+                // Inserisce la Pausa (solo se la pausa non è finita prima dell'inizio del blocco precedente)
+                if (currentTrainingStartMinutes < breakEndMinutes) {
+                    const classType = breakItem.type === 'fixed' ? 'meal' : 'break';
+                    
+                    // La pausa inizia dopo l'ultima attività schedulata, ma non oltre l'orario di fine della finestra fissa
+                    const actualBreakStartProgram = minutesToTime(currentTrainingStartMinutes);
+                    const actualBreakEndMinutes = Math.min(breakEndMinutes, endMinutes);
+                    const actualBreakDuration = actualBreakEndMinutes - currentTrainingStartMinutes;
+
+                    if (actualBreakDuration > 0) {
+                        schedule.push({
+                            type: breakItem.type === 'fixed' ? breakItem.description : `Pausa: ${breakItem.description}`,
+                            start: actualBreakStartProgram, 
+                            end: minutesToTime(actualBreakEndMinutes),
+                            duration: actualBreakDuration, 
+                            classType: classType 
+                        });
+                        currentTrainingStartMinutes = actualBreakEndMinutes;
+                    }
+                }
+            });
+
+            // 6. Blocco Finale di Allenamento (se c'è tempo rimanente)
+            if (totalTrainingDuration > 0 && currentTrainingStartMinutes < endMinutes) {
+                // Calcola la durata massima possibile fino all'orario di fine definito (o mezzanotte)
+                const remainingSpace = endMinutes - currentTrainingStartMinutes;
+                const finalBlockDuration = Math.min(totalTrainingDuration, remainingSpace);
+                
+                if (finalBlockDuration > 0) {
+                    const blockEndMinutes = currentTrainingStartMinutes + finalBlockDuration;
+                    
+                    schedule.push({
+                        type: `Allenamento Blocco ${schedule.filter(i => i.type.includes('Allenamento')).length + 1}`,
+                        start: minutesToTime(currentTrainingStartMinutes),
+                        end: minutesToTime(blockEndMinutes),
+                        duration: finalBlockDuration,
+                        classType: ''
+                    });
+                    currentTrainingStartMinutes = blockEndMinutes; 
+                    totalTrainingDuration -= finalBlockDuration;
+                }
+            }
+            
+            // 7. Blocco informativo di Tempo Libero (prima dell'inizio attività)
+             if(schedule.length > 0) {
+                if (startMinutes > 0) {
+                     schedule.unshift({
+                        type: 'Tempo Libero (00:00 - Inizio Attività)',
+                        start: '00:00',
+                        end: minutesToTime(startMinutes % (24*60)),
+                        duration: startMinutes,
+                        classType: 'info'
+                    });
+                }
+            }
+
+
+            // 8. Riassunto e Renderizzazione
+            const totalEffectiveTrainingMinutes = totalInitialDuration - totalTrainingDuration; 
+            
+            // L'orario di fine programma è l'orario di fine dell'ultima attività effettivamente schedulata
+            const finalActivityEnd = schedule.length > 0 ? schedule[schedule.length - 1].end : 'N/A';
+            
+            if (schedule.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Nessuna attività programmata. Controlla la durata dell\'allenamento e gli orari delle pause.</p>';
+                return;
+            }
+
+            let htmlOutput = `
+                <div class="bg-blue-100 p-4 rounded-lg mb-4 shadow-md">
+                    <p class="text-lg font-bold text-blue-800">Durata Totale Attività (richiesta): 🏋️ ${formatMinutesToHours(totalInitialDuration)}</p>
+                    <p class="text-sm italic text-blue-600 mb-2">${planningConstraint}</p>
+                    <p class="text-lg font-bold text-blue-800">Durata Allenamento Effettiva: ⏱️ ${formatMinutesToHours(totalEffectiveTrainingMinutes)}</p>
+                    <p class="text-lg font-bold text-gray-700">
+                        Orario di Fine Programma (Ultima Attività): ⏰ **${finalActivityEnd}**
+                    </p>
+                    ${totalEffectiveTrainingMinutes < totalInitialDuration ? 
+                       `<p class="text-sm text-red-500 mt-2">Nota: Il tempo di allenamento è stato ridotto per rispettare le pause fisse/finestra temporale. Mancano ${formatMinutesToHours(totalInitialDuration - totalEffectiveTrainingMinutes)} di allenamento richiesto.</p>` : ''
+                    }
+                </div>
+                
+                <h3 class="text-2xl font-semibold mt-6 mb-4 text-gray-700">Organizzazione Giornaliera Dettagliata</h3>
+                <table class="session-table shadow-lg rounded-lg overflow-hidden">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Inizio</th>
+                            <th>Fine</th>
+                            <th>Durata</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            schedule.forEach(item => {
+                const rowClass = item.classType || ''; // Usa la classe definita, altrimenti vuota
+                
+                htmlOutput += `
+                    <tr class="${rowClass}">
+                        <td>${item.type}</td>
+                        <td>${item.start}</td>
+                        <td>${item.end}</td>
+                        <td>${formatMinutesToHours(item.duration)}</td>
+                    </tr>
+                `;
+            });
+
+            htmlOutput += `
+                    </tbody>
+                </table>
+            `;
+
+            resultsDiv.innerHTML = htmlOutput;
+        }
+        
+        // --- Inizializzazione ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+             // Imposta la data di default a oggi
+             const today = new Date().toISOString().split('T')[0];
+             const dateInput = document.getElementById('scheduleDate');
+             dateInput.value = today;
+             
+             // Listener per il cambiamento della data (per caricare i dati specifici del giorno)
+             dateInput.addEventListener('change', loadSchedule);
+
+             // Listener per i cambiamenti negli input principali e nei pasti (per ricalcolo automatico)
+             const inputsToWatch = ['totalDurationHours', 'totalDurationMinutes', 'startTime', 'endTime'];
+             MEAL_NAMES.forEach(meal => {
+                 inputsToWatch.push(`${meal}Start`);
+                 inputsToWatch.push(`${meal}End`); 
+             });
+
+             inputsToWatch.forEach(id => {
+                 const element = document.getElementById(id);
+                 if (element) {
+                     element.addEventListener('change', calculateSchedule);
+                 }
+             });
+             
+             // Carica i dati salvati per la data corrente (se esistono) e calcola
+             loadSchedule();
+        });
+
+    </script>
+</body>
+</html>

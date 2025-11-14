@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pianificatore Sportivo</title>
+    <title>Pianificatore Sportivo Kawaii</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* NUOVI COLORI KAWAII E VARIABILI */
@@ -49,70 +49,32 @@
             text-align: left;
         }
         .session-table th {
+            /* SOSTITUISCE IL BLU DEL HEADER CON ROSA ANTICO */
             background-color: var(--color-rose-antico);
             color: var(--color-text-dark);
             font-weight: 700;
         }
         .session-table tr:nth-child(even) {
+            /* Riga pari */
             background-color: #FFFAFA; 
         }
         .session-table .break {
+            /* PAUSA ATTIVA - SOSTITUISCE IL GIALLO CON ROSA PASTELLO CHIARO */
             background-color: #FEEAEA;
             color: var(--color-text-dark);
         }
         .session-table .meal {
+            /* PASTI - SOSTITUISCE IL VERDE CON VERDE PASTELLO */
             background-color: var(--color-pastel-green);
             color: var(--color-text-dark);
         }
         .session-table .info {
+            /* BLOCCO INFO - Sfondo molto chiaro */
             background-color: #FFFFFF;
             color: var(--color-text-dark);
         }
         .session-table .break td, .session-table .meal td {
             font-style: normal;
-        }
-
-        /* Stili per la stampa */
-        @media print {
-            body { 
-                background: white !important; /* Sfondo bianco per la stampa */
-                color: black !important;
-                -webkit-print-color-adjust: exact; /* Per Safari/Chrome */
-                print-color-adjust: exact; /* Per altri browser */
-            }
-            .container { 
-                box-shadow: none !important; 
-                border: none !important; 
-                padding: 0 !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                background-color: white !important;
-            }
-            .session-table th, .session-table td {
-                border-color: #888 !important; /* Bordo più scuro per stampa */
-            }
-            .session-table th {
-                background-color: var(--color-rose-antico) !important;
-                color: var(--color-text-dark) !important;
-            }
-            .session-table .meal {
-                background-color: var(--color-pastel-green) !important;
-            }
-            .session-table .break {
-                background-color: #FEEAEA !important;
-            }
-            .bg-blue-100 { /* Per il riepilogo */
-                background-color: #FEEAEA !important;
-                border-color: var(--color-rose-antico) !important;
-            }
-            /* Nascondi tutti i pulsanti e gli elementi di input per la stampa */
-            button, input, label, .mb-6, .mb-8, .grid, .fixed, .no-print {
-                display: none !important;
-            }
-            /* Rendi visibile solo il contenuto desiderato per la stampa */
-            body > .print-only-content {
-                display: block !important;
-            }
         }
     </style>
 </head>
@@ -193,7 +155,7 @@
             <p class="text-xs mt-2" style="color: var(--color-text-dark);">Le pause fisse (pasti) vengono incluse automaticamente nel programma.</p>
         </div>
 
-        <div class="p-6 rounded-lg mb-8 border" style="background-color: #FEEAEA; border-color: var(--color-rose-antico);">
+        <div class="p-6 rounded-lg mb-8 border" style="background-color: #FFFAFA; border-color: var(--color-rose-antico);">
             <h2 class="text-2xl font-semibold mb-4" style="color: var(--color-text-dark);">Pause Attive Personalizzate <span class="text-base font-normal">(Riposo, Stretching, Idratazione)</span></h2>
             
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4 items-end">
@@ -216,13 +178,13 @@
                 </div>
                 
                 <button onclick="addBreak()" class="font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 sm:col-span-1"
-                        style="background-color: var(--color-rose-accent); color: white; border: 2px solid var(--color-text-dark);">
+                        style="background-color: var(--color-pastel-green); color: var(--color-text-dark); border: 2px solid var(--color-rose-antico); hover: background-color: #DDEEEF;">
                     Aggiungi Pausa Attiva
                 </button>
             </div>
 
             <div id="breakListContainer" class="mt-4">
-                <h3 class="text-lg font-medium text-gray-600 mb-2">Pause Attive Aggiunte:</h3>
+                <h3 class="text-lg font-medium mb-2" style="color: var(--color-rose-accent);">Pause Attive Aggiunte:</h3>
                 <ul id="currentBreaks" class="space-y-2">
                     <li id="noBreaksMessage" class="text-gray-400 italic">Nessuna pausa attiva aggiunta.</li>
                 </ul>
@@ -231,33 +193,14 @@
         </div>
 
         <button onclick="calculateSchedule()" id="calculateButton" class="w-full font-bold py-4 rounded-xl text-xl shadow-lg transition duration-300 transform hover:scale-[1.01]"
-                 style="background-color: var(--color-rose-accent); color: white;">
+                style="background-color: var(--color-rose-antico); color: white; border: 2px solid var(--color-rose-accent); text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
             Calcola Programma
         </button>
 
         <div id="results" class="mt-10 p-6 rounded-xl shadow-inner border-t-4" 
-             style="background-color: #FFFAFA; border-color: var(--color-rose-antico) !important;">
-            <h2 class="text-3xl font-bold text-gray-800 mb-4">Risultati della Pianificazione</h2>
+             style="background-color: #FFF5F5; border-color: var(--color-rose-antico) !important;">
+            <h2 class="text-3xl font-bold mb-4" style="color: var(--color-rose-accent);">Risultati della Pianificazione</h2>
             <p class="text-gray-500 italic">Inserisci i dati e calcola il programma per visualizzare qui la tabella dettagliata.</p>
-        </div>
-        
-        <div id="action-buttons" class="mt-6 flex flex-col sm:flex-row justify-center gap-4 hidden">
-            
-            <button onclick="printSchedule()" id="printButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
-                    style="background-color: var(--color-pastel-green); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5 4v3h9V4a1 1 0 00-1-1H6a1 1 0 00-1 1zm0 7h9v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5zM2 7h16a1 1 0 011 1v7a3 3 0 01-3 3H4a3 3 0 01-3-3V8a1 1 0 011-1z" clip-rule="evenodd" />
-                </svg>
-                Stampa o Salva PDF
-            </button>
-
-            <button onclick="shareOnWhatsApp()" id="whatsappButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
-                    style="background-color: var(--color-rose-antico); color: white;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M15 8a3 3 0 10-2.977-2.67l-3.222 1.61A3 3 0 105 11a3 3 0 004.977 2.67l3.222-1.61A3 3 0 1015 8z" />
-                </svg>
-                Condividi (Testo + Istruzioni Screenshot)
-            </button>
         </div>
         
         <div id="messageBox" class="fixed bottom-4 right-4 z-50"></div>
@@ -274,16 +217,16 @@
         /**
          * Mostra un messaggio di notifica (sostituisce alert()).
          */
-        function showMessage(message, type = 'warning', duration = 4000) {
+        function showMessage(message, type = 'warning') {
             const box = document.getElementById('messageBox');
             if (!box) return; 
 
-            let bgColor = 'bg-yellow-500';
-            if (type === 'error') bgColor = 'bg-red-500';
-            if (type === 'success') bgColor = 'bg-green-500';
-            if (type === 'info') bgColor = 'bg-blue-500';
+            // Stili Kawaii per i messaggi
+            let bgColor = 'background-color: #FDC8D9; color: #6F4E4E;'; // Rose for warning
+            if (type === 'error') bgColor = 'background-color: #D8A7A7; color: white;'; // Darker Rose for error
+            if (type === 'success') bgColor = 'background-color: #E1F0E1; color: #6F4E4E; border: 1px solid #D8A7A7;'; // Pastel Green for success
 
-            const messageHtml = `<div class="${bgColor} text-white p-4 rounded-lg shadow-xl mb-3 opacity-0 transition-opacity duration-300 transform translate-y-2"
+            const messageHtml = `<div style="${bgColor}" class="p-4 rounded-lg shadow-xl mb-3 opacity-0 transition-opacity duration-300 transform translate-y-2"
                      role="alert" style="min-width: 250px;">
                     ${message}
                 </div>`;
@@ -315,7 +258,7 @@
                        box.removeChild(messageElement);
                     }
                 }, 300);
-            }, duration);
+            }, 4000);
         }
 
         // --- Utilità per il Tempo ---
@@ -531,11 +474,12 @@
                  html = '<li id="noBreaksMessage" class="text-gray-400 italic">Nessuna pausa attiva aggiunta.</li>';
             } else {
                 breakList.forEach((b, index) => {
+                    // Uso di stili inline per le liste delle pause
                     html += `
                         <li class="flex justify-between items-center p-3 rounded-lg shadow-sm border" style="background-color: white; border-color: var(--color-rose-antico);">
                             <span class="font-medium" style="color: var(--color-text-dark);">
                                 ${b.start} - ${b.description} 
-                                <span class="text-sm text-gray-500">(${formatMinutesToHours(b.duration)})</span>
+                                <span class="text-sm" style="color: #9A7B7B;">(${formatMinutesToHours(b.duration)})</span>
                             </span>
                             <button onclick="removeBreak(${index})" class="text-red-500 hover:text-red-700 transition duration-150" aria-label="Rimuovi Pausa">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -550,173 +494,6 @@
             container.innerHTML = html;
         }
 
-        // --- NUOVE FUNZIONI DI STAMPA E CONDIVISIONE ---
-
-        /**
-         * Ricollega tutti gli Event Listeners dopo il ripristino dalla stampa.
-         */
-        function attachEventListeners() {
-             const dateInput = document.getElementById('scheduleDate');
-             if (dateInput) {
-                dateInput.addEventListener('change', loadSchedule);
-             }
-
-             const inputsToWatch = ['totalDurationHours', 'totalDurationMinutes', 'startTime', 'endTime'];
-             MEAL_NAMES.forEach(meal => {
-                 inputsToWatch.push(`${meal}Start`);
-                 inputsToWatch.push(`${meal}End`); 
-             });
-
-             inputsToWatch.forEach(id => {
-                 const element = document.getElementById(id);
-                 if (element) {
-                     element.addEventListener('change', calculateSchedule);
-                 }
-             });
-             
-             const calcBtn = document.getElementById('calculateButton');
-             if (calcBtn) {
-                 calcBtn.addEventListener('click', calculateSchedule);
-             }
-        }
-        
-        /**
-         * Stampa la sezione dei risultati o salva come PDF.
-         * Nasconde temporaneamente il resto dell'interfaccia.
-         */
-        function printSchedule() {
-            const resultsDiv = document.getElementById('results');
-            const scheduleTable = document.querySelector('#results .session-table');
-
-            // Verifica se ci sono risultati da stampare
-            if (!scheduleTable) {
-                showMessage("Prima devi calcolare il programma per poterlo stampare.", 'warning');
-                return;
-            }
-
-            // 1. Prepara lo stile e il contenuto per la stampa
-            const originalBody = document.body.innerHTML;
-            const printContent = `<div class="print-container">
-                <style>
-                    /* Inietta stili specifici per la stampa (copiati dagli stili Kawaii per coerenza) */
-                    body { 
-                        background: white !important; 
-                        margin: 0; 
-                        padding: 0;
-                        color: black !important;
-                        font-family: sans-serif;
-                    }
-                    h1 { color: #D8A7A7; text-align: center; font-size: 24px; margin-bottom: 20px; }
-                    
-                    /* Sovrascrivi gli stili Tailwind per la tabella in stampa */
-                    .session-table { 
-                        width: 100%; 
-                        border-collapse: collapse; 
-                        margin-top: 15px; 
-                        font-size: 14px;
-                    }
-                    .session-table th, .session-table td { 
-                        border: 1px solid #888; /* Bordo più scuro per la stampa */
-                        padding: 8px; 
-                        text-align: left; 
-                    }
-                    .session-table th { background-color: #EAC9C6 !important; color: #6F4E4E !important; }
-                    .session-table .meal { background-color: #E1F0E1 !important; } 
-                    .session-table .break { background-color: #FEEAEA !important; }
-                    .session-table .info { background-color: #f7f7f7 !important; }
-                    .bg-blue-100 { background-color: #FEEAEA !important; padding: 10px; border: 1px solid #ccc;} /* Stile per il riepilogo */
-                </style>
-                <h1 style="color: #D8A7A7; text-align: center; font-size: 24px; margin-bottom: 20px;">Pianificatore Sportivo Giornaliero</h1>
-                ${resultsDiv.innerHTML}
-            </div>`;
-
-            // 2. Sostituisce il contenuto del body con il contenuto da stampare
-            document.body.innerHTML = printContent;
-            
-            // 3. Avvia la stampa
-            window.print();
-            
-            // 4. Ripristina il contenuto originale dopo la stampa (con un piccolo ritardo)
-            setTimeout(() => {
-                document.body.innerHTML = originalBody;
-                // Ricollega gli eventi dopo il ripristino
-                attachEventListeners(); 
-            }, 500);
-        }
-        
-        /**
-         * Prepara e condivide un riassunto del programma su WhatsApp (solo testo) e SUGGERISCE lo screenshot.
-         */
-        function shareOnWhatsApp() {
-            const date = document.getElementById('scheduleDate').value;
-            const scheduleTable = document.querySelector('#results .session-table');
-
-            if (!scheduleTable) {
-                showMessage("Calcola il programma prima di condividerlo.", 'warning');
-                return;
-            }
-            
-            // ISTRUZIONE ESPLICITA PER LO SCREENSHOT
-            showMessage("✅ PER L'IMMAGINE: Fai uno screenshot di questa tabella e invialo dalla tua galleria! Ora avvio la condivisione del testo riassuntivo.", 'info', 7000); 
-
-            // Raccoglie i dati della tabella
-            let summary = `*📅 Programma Sportivo del ${date} 📅*\n\n`;
-            
-            // Aggiunge il riepilogo
-            const summaryDiv = document.querySelector('#results > div:first-child');
-            if(summaryDiv) {
-                // Estrae il testo rilevante dal riepilogo
-                const summaryText = summaryDiv.innerText.replace(/(\n{2,})/g, '\n').replace('Pianificazione vincolata', 'Vincolo').trim();
-                summary += summaryText + '\n\n';
-            }
-
-            summary += `*🌟 Dettaglio Attività 🌟*\n`;
-            
-            // Estrae il contenuto della tabella
-            const rows = scheduleTable.querySelectorAll('tbody tr');
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length === 4) {
-                    let type = cells[0].innerText.trim();
-                    let start = cells[1].innerText.trim();
-                    let end = cells[2].innerText.trim();
-                    let duration = cells[3].innerText.trim();
-                    
-                    // Formatta in modo compatto per WhatsApp
-                    summary += `• ${start}-${end} | ${duration} | ${type}\n`;
-                }
-            });
-            
-            summary += `\n*✨ Creato con il Pianificatore Sportivo Kawaii ✨*`;
-
-            // Codifica il testo per l'URL di WhatsApp
-            const encodedText = encodeURIComponent(summary);
-            
-            // Usa l'API di condivisione nativa se disponibile (migliore su mobile)
-            if (navigator.share) {
-                // Leggero ritardo per permettere all'utente di leggere il messaggio di screenshot
-                setTimeout(() => {
-                    navigator.share({
-                        title: `Programma Sportivo del ${date}`,
-                        text: summary
-                    }).then(() => {
-                        // showMessage('Programma condiviso con successo!', 'success'); // Commentato per non sovrapporsi al messaggio precedente
-                    }).catch((error) => {
-                        if (error.name !== 'AbortError') {
-                            // Fallback: apri il link web se la condivisione nativa fallisce
-                            window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-                        }
-                    });
-                }, 500);
-
-            } else {
-                // Fallback per desktop o browser senza l'API di condivisione
-                 setTimeout(() => {
-                    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-                 }, 500);
-            }
-        }
-
         // --- Logica di Calcolo Principale ---
 
         function calculateSchedule() {
@@ -729,11 +506,9 @@
             const startTimeStr = document.getElementById('startTime').value.trim();
             const endTimeStr = document.getElementById('endTime').value.trim();
             const resultsDiv = document.getElementById('results');
-            const actionButtons = document.getElementById('action-buttons'); 
             
             if (totalTrainingDuration <= 0) {
                  resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Per favore, inserisci una durata totale valida per l\'allenamento (maggiore di 0 minuti).</p>';
-                 if (actionButtons) actionButtons.classList.add('hidden'); // Nascondi se fallisce
                 return;
             }
 
@@ -815,7 +590,6 @@
             } else if (startTimeStr || endTimeStr) {
                 // Se solo uno è impostato, è un errore nell'input in questa modalità
                  resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Per la pianificazione vincolata devi inserire SIA l\'Ora di Inizio che l\'Ora di Fine, oppure lasciare entrambi vuoti per la distribuzione libera.</p>';
-                 if (actionButtons) actionButtons.classList.add('hidden'); // Nascondi se fallisce
                 return;
             } else {
                 planningConstraint = `Pianificazione libera: l\'allenamento inizierà dopo l'ultima pausa fissa/attiva più vicina al mattino.`;
@@ -934,16 +708,15 @@
             
             if (schedule.length === 0) {
                 resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Nessuna attività programmata. Controlla la durata dell\'allenamento e gli orari delle pause.</p>';
-                if (actionButtons) actionButtons.classList.add('hidden'); // Nascondi se fallisce
                 return;
             }
 
             let htmlOutput = `
-                <div class="p-4 rounded-lg mb-4 shadow-md" style="background-color: #FEEAEA; border: 1px solid var(--color-rose-antico);">
-                    <p class="text-lg font-bold" style="color: var(--color-text-dark);">Durata Totale Attività (richiesta): 🏋️ ${formatMinutesToHours(totalInitialDuration)}</p>
-                    <p class="text-sm italic text-gray-500 mb-2">${planningConstraint}</p>
-                    <p class="text-lg font-bold" style="color: var(--color-text-dark);">Durata Allenamento Effettiva: ⏱️ ${formatMinutesToHours(totalEffectiveTrainingMinutes)}</p>
-                    <p class="text-lg font-bold text-gray-700">
+                <div class="p-4 rounded-lg mb-4 shadow-md" style="background-color: #FEEAEA; border: 2px solid var(--color-rose-antico);">
+                    <p class="text-lg font-bold" style="color: var(--color-rose-accent);">Durata Totale Attività (richiesta): 🏋️ ${formatMinutesToHours(totalInitialDuration)}</p>
+                    <p class="text-sm italic" style="color: #9A7B7B; margin-bottom: 0.5rem;">${planningConstraint}</p>
+                    <p class="text-lg font-bold" style="color: var(--color-rose-accent);">Durata Allenamento Effettiva: ⏱️ ${formatMinutesToHours(totalEffectiveTrainingMinutes)}</p>
+                    <p class="text-lg font-bold" style="color: var(--color-text-dark);">
                         Orario di Fine Programma (Ultima Attività): ⏰ **${finalActivityEnd}**
                     </p>
                     ${totalEffectiveTrainingMinutes < totalInitialDuration ? 
@@ -983,11 +756,6 @@
             `;
 
             resultsDiv.innerHTML = htmlOutput;
-            
-            // 9. Mostra i pulsanti di azione
-            if (actionButtons) {
-                actionButtons.classList.remove('hidden');
-            }
         }
         
         // --- Inizializzazione ---
@@ -998,15 +766,23 @@
              const dateInput = document.getElementById('scheduleDate');
              dateInput.value = today;
              
-             // Nascondi i pulsanti all'inizio
-             const actionButtons = document.getElementById('action-buttons');
-             if (actionButtons) {
-                 actionButtons.classList.add('hidden'); 
-             }
-             
-             // Ricollega tutti gli Event Listeners
-             attachEventListeners();
+             // Listener per il cambiamento della data (per caricare i dati specifici del giorno)
+             dateInput.addEventListener('change', loadSchedule);
 
+             // Listener per i cambiamenti negli input principali e nei pasti (per ricalcolo automatico)
+             const inputsToWatch = ['totalDurationHours', 'totalDurationMinutes', 'startTime', 'endTime'];
+             MEAL_NAMES.forEach(meal => {
+                 inputsToWatch.push(`${meal}Start`);
+                 inputsToWatch.push(`${meal}End`); 
+             });
+
+             inputsToWatch.forEach(id => {
+                 const element = document.getElementById(id);
+                 if (element) {
+                     element.addEventListener('change', calculateSchedule);
+                 }
+             });
+             
              // Carica i dati salvati per la data corrente (se esistono) e calcola
              loadSchedule();
         });

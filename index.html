@@ -427,6 +427,10 @@
                 
                 if (response.ok) {
                    console.log("Dati salvati su JSONBin con successo.");
+                   // Se chiamata esplicitamente dal pulsante, mostro il messaggio
+                   if (event && event.target.innerText.includes('Salva su Cloud')) {
+                       showMessage('Dati salvati sul Cloud!', 'success', 3000);
+                   }
                 } else {
                    showMessage("Errore salvataggio Cloud. Controlla Master Key e BIN ID.", 'error');
                    console.error("Errore risposta JSONBin:", response.status, await response.text());
@@ -443,6 +447,7 @@
          */
         async function loadSchedule() {
             const date = document.getElementById('scheduleDate').value;
+            const isManualLoad = event && event.target.innerText.includes('Carica da Cloud');
 
             try {
                 // Se BIN_ID non è stato inserito, salta il Cloud
@@ -491,12 +496,13 @@
                                 document.getElementById(`${meal}End`).value = data.fixedBreaks[meal].end;
                             }
                         });
-                        showMessage(`Dati del ${date} caricati dal Cloud!`, 'info', 3000);
+                        showMessage(`Dati del ${date} caricati dal Cloud!`, 'success', 3000); // Messaggio di successo
 
                     } else {
                          // Se la data è diversa, usiamo solo i dati di default o i dati attuali
-                        showMessage(`Dati Cloud trovati, ma erano per il ${data.currentDate}. Caricamento programma predefinito per il ${date}.`, 'warning', 5000);
-                         // NON resetto la breakList in questo caso, la lascio come è nell'UI
+                        if (isManualLoad) {
+                             showMessage(`Dati Cloud trovati, ma erano per il ${data.currentDate}. Caricamento programma predefinito per il ${date}.`, 'warning', 5000);
+                        }
                     }
 
                 } else {
@@ -506,14 +512,23 @@
                     document.getElementById('totalDurationMinutes').value = 0;
                     document.getElementById('startTime').value = ''; 
                     document.getElementById('endTime').value = '';
-                    showMessage(`Nessun dato Cloud trovato. Caricamento default.`, 'warning', 3000);
+                    if (isManualLoad) {
+                         showMessage(`Nessun dato Cloud trovato per la data selezionata. Caricamento default.`, 'warning', 3000);
+                    }
                 }
                 
                 renderBreaks();
                 calculateSchedule(); 
                 
             } catch (error) {
-                showMessage("Errore nel caricamento Cloud. Controlla Master Key e BIN ID. (Codice errore 404 o 400 è normale al primo avvio)", 'error', 7000);
+                // L'errore 404/400 è normale al primo avvio
+                if (isManualLoad) {
+                    showMessage("Errore nel caricamento Cloud (nessun dato salvato). Caricamento predefinito.", 'warning', 7000);
+                } else {
+                    // Solo all'avvio: errore Cloud è gestito nel messaggio 'error'
+                    showMessage("Errore nel caricamento Cloud. Controlla Master Key e BIN ID. (Codice errore 404 o 400 è normale al primo avvio)", 'error', 7000);
+                }
+                
                 console.error("Errore fetch caricamento:", error);
                 // In caso di fallimento, carica comunque i dati di default
                 renderBreaks();

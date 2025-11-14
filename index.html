@@ -125,12 +125,9 @@
     <div class="container max-w-4xl mx-auto p-6 sm:p-10 rounded-xl shadow-2xl" 
          style="background-color: #FFFAFA; border: 3px solid var(--color-rose-antico); box-shadow: 0 10px 15px -3px rgba(170, 130, 130, 0.3), 0 4px 6px -2px rgba(170, 130, 130, 0.15) !important;">
          
-        <div class="flex flex-col items-center justify-center mb-8">
-            <img src="Screenshot_14-11-2025_231232_www.bing.com.jpeg" alt="Tapis Roulant Kawaii" class="w-24 h-24 sm:w-32 sm:h-32 object-contain mb-4"> 
-            <h1 class="text-4xl font-extrabold text-center" style="color: var(--color-rose-accent) !important;">Pianificatore Sportivo Giornaliero</h1>
-        </div>
+        <h1 class="text-4xl font-extrabold text-center mb-8" style="color: var(--color-rose-accent) !important;">Pianificatore Sportivo Giornaliero</h1>
         <p class="text-center text-gray-500 mb-6">Organizza la tua giornata combinando allenamento, pause fisse (pasti) e pause attive.</p>
-        
+
         <div id="input-group" class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-lg mb-8 shadow-inner" 
              style="background-color: #FEEAEA; border: 1px solid var(--color-rose-antico);">
             <div class="md:col-span-1">
@@ -250,6 +247,21 @@
         
         <div id="action-buttons" class="mt-6 flex flex-col sm:flex-row justify-center gap-4 hidden">
             
+            <button onclick="exportData()" id="exportButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
+                    style="background-color: #fce4ec; color: var(--color-text-dark); border: 2px solid #D8A7A7;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 5a2 2 0 00-2 2v2a2 2 0 002 2h4a2 2 0 002-2V7a2 2 0 00-2-2H8zM6 7a4 4 0 014-4h.01a4 4 0 014 4v2a4 4 0 01-4 4H8a4 4 0 01-4-4V7zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+                </svg>
+                Esporta Dati (Copia)
+            </button>
+            <button onclick="importData()" id="importButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
+                    style="background-color: #F0F4C3; color: var(--color-text-dark); border: 2px solid #D8A7A7;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-7-9a1 1 0 000 2h4.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414L7.586 9H3z" clip-rule="evenodd" />
+                </svg>
+                Importa Dati (Incolla)
+            </button>
+            
             <button onclick="printSchedule()" id="printButton" class="flex items-center justify-center font-bold py-3 px-6 rounded-xl shadow-md transition duration-300"
                     style="background-color: var(--color-pastel-green); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -274,7 +286,8 @@
         // Variabili Globali
         let breakList = []; // Array di oggetti pausa attiva: { description, start: "HH:MM", duration: minuti_totali, type: 'active' }
         const MEAL_NAMES = ['colazione', 'pranzo', 'merenda', 'cena'];
-        const APP_STORAGE_KEY = 'sportPlannerData';
+        // Chiave unica per l'archiviazione
+        const APP_STORAGE_KEY = 'sportPlannerData'; 
 
         // --- Funzioni di Utilità UI (Gestione Messaggi) ---
 
@@ -557,7 +570,7 @@
             container.innerHTML = html;
         }
 
-        // --- NUOVE FUNZIONI DI STAMPA E CONDIVISIONE ---
+        // --- FUNZIONI DI STAMPA, CONDIVISIONE E SINCRONIZZAZIONE ---
 
         /**
          * Ricollega tutti gli Event Listeners dopo il ripristino dalla stampa.
@@ -722,6 +735,72 @@
                     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
                  }, 500);
             }
+        }
+        
+        /**
+         * Esporta tutti i dati di LocalStorage nell'APP_STORAGE_KEY e li copia negli appunti.
+         */
+        function exportData() {
+            const data = localStorage.getItem(APP_STORAGE_KEY);
+            
+            if (!data || data === '{}') {
+                showMessage("Nessun dato da esportare. Calcola o aggiungi delle pause per salvare il programma.", 'warning');
+                return;
+            }
+
+            // Tentativo di copiare negli appunti del dispositivo
+            navigator.clipboard.writeText(data)
+                .then(() => {
+                    showMessage("✅ Dati del programma copiati negli appunti. Incolla questo testo sul tuo altro dispositivo nella funzione Importa.", 'success', 8000);
+                })
+                .catch(err => {
+                    console.error('Errore durante la copia:', err);
+                    // Fallback per vecchi browser o se navigator.clipboard non è permesso
+                    showMessage("Errore: Impossibile copiare automaticamente. Controlla che il browser abbia i permessi o copia manualmente (il testo verrà mostrato in un popup).", 'error', 10000);
+                    // Mostra i dati con un vecchio alert per il fallback manuale
+                    alert(data);
+                });
+        }
+        
+        /**
+         * Legge i dati dagli appunti e li salva in LocalStorage.
+         */
+        function importData() {
+            // Tentativo di leggere dagli appunti del dispositivo
+            navigator.clipboard.readText()
+                .then(clipboardText => {
+                    if (!clipboardText) {
+                        showMessage("Nessun testo trovato negli appunti o permessi negati. Copia prima i dati dal PC/telefono.", 'warning');
+                        return;
+                    }
+
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(clipboardText);
+                    } catch (e) {
+                        showMessage("I dati negli appunti non sono validi (formato errato). Assicurati di aver copiato il testo completo e corretto.", 'error');
+                        return;
+                    }
+
+                    // Assicurati che i dati siano nel formato corretto per l'app (dovrebbe essere un oggetto con chiavi data)
+                    if (typeof parsedData !== 'object' || parsedData === null || Object.keys(parsedData).length === 0) {
+                        showMessage("I dati copiati non sono riconosciuti come un programma valido. Riprova a esportare i dati corretti.", 'error');
+                        return;
+                    }
+
+                    // Sovrascrivi il LocalStorage esistente
+                    localStorage.setItem(APP_STORAGE_KEY, clipboardText);
+                    
+                    // Ricarica il programma per la data corrente con i nuovi dati
+                    loadSchedule(); 
+                    
+                    showMessage("🎉 Dati importati con successo e programma aggiornato! Ricalcola se necessario.", 'success', 8000);
+
+                })
+                .catch(err => {
+                    console.error('Errore durante la lettura degli appunti:', err);
+                    showMessage("Errore: Impossibile accedere agli appunti del sistema. Assicurati che il browser abbia i permessi di lettura.", 'error');
+                });
         }
 
         // --- Logica di Calcolo Principale ---

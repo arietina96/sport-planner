@@ -14,27 +14,14 @@
             --color-text-dark: #6F4E4E; /* Testo Marrone/Rosa per morbidezza */
         }
         
-        /* SFONDO GLITTER/KAWAII - Pattern ripetuto con i colori pastello */
+        /* SFONDO GLITTER/KAWAII E STILI */
         body {
             background-color: var(--color-pastel-green) !important;
             background-image: 
-                /* Strato 1: Glitter/Dots sottili in Rosa Antico */
                 radial-gradient(var(--color-rose-antico) 10%, transparent 10%),
-                /* Strato 2: Leggere Strice/Checkers in Verde Pastello */
                 repeating-linear-gradient(45deg, var(--color-pastel-green) 0, var(--color-pastel-green) 1px, transparent 1px, transparent 8px);
             background-size: 15px 15px, 10px 10px;
             color: var(--color-text-dark); 
-        }
-
-        /* Sovrascrittura colori testo base */
-        .text-gray-700 {
-            color: var(--color-text-dark) !important;
-        }
-        .text-gray-500 {
-            color: #9A7B7B !important; /* Versione più chiara del testo */
-        }
-        .text-gray-600 {
-            color: var(--color-text-dark) !important;
         }
 
         /* Stili Personalizzati Tabella */
@@ -75,10 +62,10 @@
         /* Stili per la stampa */
         @media print {
             body { 
-                background: white !important; /* Sfondo bianco per la stampa */
+                background: white !important; 
                 color: black !important;
-                -webkit-print-color-adjust: exact; /* Per Safari/Chrome */
-                print-color-adjust: exact; /* Per altri browser */
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
             }
             .container { 
                 box-shadow: none !important; 
@@ -89,7 +76,7 @@
                 background-color: white !important;
             }
             .session-table th, .session-table td {
-                border-color: #888 !important; /* Bordo più scuro per stampa */
+                border-color: #888 !important; 
             }
             .session-table th {
                 background-color: var(--color-rose-antico) !important;
@@ -101,17 +88,13 @@
             .session-table .break {
                 background-color: #FEEAEA !important;
             }
-            .bg-blue-100 { /* Per il riepilogo */
+            .bg-blue-100 { 
                 background-color: #FEEAEA !important;
                 border-color: var(--color-rose-antico) !important;
             }
             /* Nascondi tutti i pulsanti e gli elementi di input per la stampa */
             button, input, label, .mb-6, .mb-8, .grid, .fixed, .no-print {
                 display: none !important;
-            }
-            /* Rendi visibile solo il contenuto desiderato per la stampa */
-            body > .print-only-content {
-                display: block !important;
             }
         }
     </style>
@@ -231,13 +214,13 @@
         </div>
 
         <div class="flex justify-between gap-4 mb-4">
-            <button onclick="saveSchedule(); showMessage('Dati salvati sul Cloud!', 'success', 3000);" class="w-1/2 font-bold py-3 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01]"
+            <button onclick="saveSchedule();" class="w-1/2 font-bold py-3 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01]"
                 style="background-color: var(--color-pastel-green); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
                 💾 Salva su Cloud
             </button>
             <button onclick="loadSchedule();" class="w-1/2 font-bold py-3 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01]"
                 style="background-color: var(--color-rose-antico); color: var(--color-text-dark); border: 2px solid var(--color-rose-accent);">
-                🔄 Carica da Cloud
+                🔄 Carica i Dati del Giorno
             </button>
         </div>
 
@@ -280,15 +263,9 @@
         let breakList = []; 
         const MEAL_NAMES = ['colazione', 'pranzo', 'merenda', 'cena'];
 
-        // !!! MASTER KEY AGGIORNATA DALL'UTENTE !!!
-        // Master Key per caricamento (GET) e salvataggio (PUT).
-        // Assicurati che il BIN '6917b563d0ea881f40e8f68b' sia impostato come PRIVATE su JSONBin.io.
+        // !!! MASTER KEY e BIN ID forniti dall'utente !!!
         const MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; 
-        
-        // La vecchia Access Key non è più necessaria.
-        // const ACCESS_KEY = "CHIAVE NON USATA";
         const BIN_ID = "6917b563d0ea881f40e8f68b";         
-        // L'endpoint completo dove salvare i dati
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`; 
         
         // --- Funzioni di Utilità UI (Gestione Messaggi) ---
@@ -373,9 +350,9 @@
         // --- 2. Gestione Stato Cloud (JSONBin.io) ---
 
         /**
-         * Raccoglie tutti i dati di input per il salvataggio.
+         * Raccoglie tutti i dati di input ATTUALI, ESCLUSA la data.
          */
-        function collectAllInputs() {
+        function collectCurrentScheduleData() {
             const totalDurationHours = document.getElementById('totalDurationHours').value || 0;
             const totalDurationMinutes = document.getElementById('totalDurationMinutes').value || 0;
             const startTime = document.getElementById('startTime').value;
@@ -393,9 +370,10 @@
                 }
             });
             
+            // Ordina le pause attive per orario di inizio prima di salvare
+            breakList.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+
             return {
-                // Salviamo la data attuale per coerenza tra dispositivi
-                currentDate: document.getElementById('scheduleDate').value,
                 totalDurationHours,
                 totalDurationMinutes,
                 startTime,
@@ -404,36 +382,82 @@
                 fixedBreaks: mealsData
             };
         }
+        
+        /**
+         * Funzione Helper: Scarica tutti i dati salvati dal BIN (tutte le date).
+         */
+        async function fetchAllSchedules() {
+            try {
+                if (MASTER_KEY === "INSERISCI_QUI_LA_NUOVA_MASTER_KEY") {
+                    return {};
+                }
+                
+                const response = await fetch(JSONBIN_URL + "/latest", {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': MASTER_KEY 
+                    }
+                });
+
+                if (response.status === 404 || response.status === 400 || response.status === 204) {
+                    // 404/400/204 significa che il bin è vuoto o non esiste. OK.
+                    return {};
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Risposta non OK (${response.status}) durante il recupero. BIN o Chiave errata.`);
+                }
+                
+                const jsonResponse = await response.json();
+                // Il record è l'oggetto che contiene tutti i giorni.
+                return jsonResponse.record || {}; 
+                
+            } catch (error) {
+                showMessage(`Errore nel recupero dati Cloud: ${error.message}`, 'error', 7000);
+                console.error("Errore fetchAllSchedules:", error);
+                return {};
+            }
+        }
+
 
         /**
-         * Salva tutti i dati su JSONBin.io (sovrascrive il contenuto del bin).
+         * Salva i dati della data corrente su JSONBin.io (mantenendo i dati degli altri giorni).
          */
         async function saveSchedule() {
+            const date = document.getElementById('scheduleDate').value;
+            if (!date) {
+                 showMessage("Seleziona una data per salvare il programma.", 'error');
+                 return;
+            }
+
             try {
-                // Se la chiave è ancora il placeholder, avvisa l'utente e blocca
                 if (MASTER_KEY === "INSERISCI_QUI_LA_NUOVA_MASTER_KEY") {
-                     showMessage("ERRORE: Devi prima inserire la tua nuova Master Key nel codice!", 'error');
+                     showMessage("ERRORE: Devi prima inserire la tua Master Key nel codice!", 'error');
                      return;
                 }
                 
-                const currentInputs = collectAllInputs();
+                // 1. Recupera tutti i salvataggi esistenti
+                const allSchedules = await fetchAllSchedules();
                 
-                // Ordina le pause attive per orario di inizio prima di salvare
-                currentInputs.activeBreaks.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+                // 2. Raccoglie i dati del giorno corrente
+                const currentDayData = collectCurrentScheduleData();
 
+                // 3. Aggiorna l'oggetto generale con i dati del giorno selezionato
+                allSchedules[date] = currentDayData;
+                
+                // 4. Salva l'oggetto completo (con tutti i giorni)
                 const response = await fetch(JSONBIN_URL, {
-                    method: 'PUT', // PUT sovrascrive il contenuto del bin
+                    method: 'PUT', // Sovrascrive il contenuto
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY // *** USA SOLO LA MASTER KEY PER MASSIMA POTENZA ***
+                        'X-Master-Key': MASTER_KEY 
                     },
-                    body: JSON.stringify(currentInputs)
+                    body: JSON.stringify(allSchedules)
                 });
                 
                 if (response.ok) {
-                   console.log("Dati salvati su JSONBin con successo.");
+                   showMessage(`Dati del ${date} salvati sul Cloud!`, 'success', 3000);
                 } else {
-                   // Se il salvataggio fallisce qui, la chiave è errata o il BIN è Public
                    const errorDetails = await response.text();
                    showMessage(`ERRORE SALVATAGGIO CLOUD. (Stato: ${response.status}). Causa probabile: Master Key ERRATA o BIN NON PRIVATO.`, 'error');
                    console.error("Errore risposta JSONBin:", response.status, errorDetails);
@@ -446,73 +470,75 @@
         }
 
         /**
-         * Carica i dati da JSONBin.io e popola i campi.
+         * Carica i dati specifici della data selezionata da JSONBin.io e popola i campi.
          */
         async function loadSchedule() {
             const date = document.getElementById('scheduleDate').value;
+            if (!date) {
+                 showMessage("Seleziona una data da caricare.", 'error');
+                 return;
+            }
 
+            // Imposta i valori di default/vuoti
+            function loadDefaults() {
+                document.getElementById('totalDurationHours').value = 3;
+                document.getElementById('totalDurationMinutes').value = 0;
+                document.getElementById('startTime').value = '';
+                document.getElementById('endTime').value = '';
+                // Carica i default per i pasti fissi (o li resetta a quelli hardcoded)
+                 MEAL_NAMES.forEach(meal => {
+                    const startEl = document.getElementById(`${meal}Start`);
+                    const endEl = document.getElementById(`${meal}End`);
+                    if (startEl && startEl.defaultValue) startEl.value = startEl.defaultValue;
+                    if (endEl && endEl.defaultValue) endEl.value = endEl.defaultValue;
+                });
+                breakList = [];
+            }
+            
             try {
-                // Se la chiave è ancora il placeholder, avvisa l'utente e usa i default
                 if (MASTER_KEY === "INSERISCI_QUI_LA_NUOVA_MASTER_KEY") {
                     showMessage("Modalità locale: Inserisci la tua Master Key nel codice per attivare il Cloud Sync.", 'warning', 4000);
-                    breakList = [];
+                    loadDefaults();
                     renderBreaks();
                     calculateSchedule();
                     return; 
                 }
                 
-                // Ottiene la versione più recente del bin
-                const response = await fetch(JSONBIN_URL + "/latest", {
-                    method: 'GET',
-                    headers: {
-                        // Master Key è necessaria qui per Bin privati
-                        'X-Master-Key': MASTER_KEY 
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text(); 
-                    // Mostra errore solo se non è un 404/400 (normale al primo avvio)
-                    if (response.status !== 404 && response.status !== 400) {
-                        throw new Error(`Risposta non OK (${response.status}): ${errorText.substring(0, 100)}...`);
-                    }
-                }
-
-                const jsonResponse = await response.json();
-                const data = jsonResponse.record; // Il contenuto utile è sotto la chiave 'record'
+                // 1. Recupera tutti i salvataggi esistenti
+                const allSchedules = await fetchAllSchedules();
+                
+                // 2. Estrae i dati per la data selezionata
+                const data = allSchedules[date]; 
 
                 if (data && Object.keys(data).length > 0) {
                     
-                    // Solo se la data del salvataggio è la stessa di quella selezionata
-                    if (data.currentDate === date) {
-                        document.getElementById('totalDurationHours').value = data.totalDurationHours ?? 3;
-                        document.getElementById('totalDurationMinutes').value = data.totalDurationMinutes ?? 0;
-                        document.getElementById('startTime').value = data.startTime ?? '';
-                        document.getElementById('endTime').value = data.endTime ?? '';
-                        breakList = data.activeBreaks || [];
-                        
-                        // Carica i pasti fissi
-                        MEAL_NAMES.forEach(meal => {
-                            if (data.fixedBreaks && data.fixedBreaks[meal]) {
-                                document.getElementById(`${meal}Start`).value = data.fixedBreaks[meal].start;
-                                document.getElementById(`${meal}End`).value = data.fixedBreaks[meal].end;
-                            }
-                        });
-                        showMessage(`Dati del ${date} caricati dal Cloud!`, 'info', 3000);
-
-                    } else {
-                         // Se la data è diversa, usiamo solo i dati di default o i dati attuali
-                        showMessage(`Dati Cloud trovati, ma erano per il ${data.currentDate}. Caricamento programma predefinito per il ${date}.`, 'warning', 5000);
-                    }
-
+                    // Popola i campi con i dati trovati
+                    document.getElementById('totalDurationHours').value = data.totalDurationHours ?? 3;
+                    document.getElementById('totalDurationMinutes').value = data.totalDurationMinutes ?? 0;
+                    document.getElementById('startTime').value = data.startTime ?? '';
+                    document.getElementById('endTime').value = data.endTime ?? '';
+                    breakList = data.activeBreaks || [];
+                    
+                    // Carica i pasti fissi
+                    MEAL_NAMES.forEach(meal => {
+                        if (data.fixedBreaks && data.fixedBreaks[meal]) {
+                            document.getElementById(`${meal}Start`).value = data.fixedBreaks[meal].start;
+                            document.getElementById(`${meal}End`).value = data.fixedBreaks[meal].end;
+                        } else {
+                            // Se il pasto non è nei dati salvati, carica il suo default hardcoded.
+                             const startEl = document.getElementById(`${meal}Start`);
+                             const endEl = document.getElementById(`${meal}End`);
+                             if (startEl && startEl.defaultValue) startEl.value = startEl.defaultValue;
+                             if (endEl && endEl.defaultValue) endEl.value = endEl.defaultValue;
+                        }
+                    });
+                    
+                    showMessage(`Dati del ${date} caricati dal Cloud!`, 'info', 3000);
+                    
                 } else {
-                    // Reset ai valori di default se non ci sono dati Cloud
-                    breakList = [];
-                    document.getElementById('totalDurationHours').value = 3;
-                    document.getElementById('totalDurationMinutes').value = 0;
-                    document.getElementById('startTime').value = ''; 
-                    document.getElementById('endTime').value = '';
-                    showMessage(`Nessun dato Cloud trovato. Caricamento default.`, 'warning', 3000);
+                    // Nessun dato trovato per quella data, carica i default
+                    loadDefaults();
+                    showMessage(`Nessun dato salvato sul Cloud per il ${date}. Caricamento default.`, 'warning', 3000);
                 }
                 
                 renderBreaks();
@@ -520,8 +546,8 @@
                 
             } catch (error) {
                 showMessage("Errore nel caricamento Cloud. Controlla Master Key e BIN ID.", 'error', 7000);
-                console.error("Errore fetch caricamento:", error);
-                // In caso di fallimento, carica comunque i dati di default
+                console.error("Errore loadSchedule:", error);
+                loadDefaults();
                 renderBreaks();
                 calculateSchedule();
             }
@@ -608,12 +634,13 @@
             container.innerHTML = html;
         }
 
-        // --- NUOVE FUNZIONI DI STAMPA E CONDIVISIONE ---
+        // --- Event Listeners ---
 
         function attachEventListeners() {
              const dateInput = document.getElementById('scheduleDate');
              if (dateInput) {
-                dateInput.addEventListener('change', loadSchedule);
+                // Quando la data cambia, ricarica i dati di QUEL giorno specifico
+                dateInput.addEventListener('change', loadSchedule); 
              }
 
              const inputsToWatch = ['totalDurationHours', 'totalDurationMinutes', 'startTime', 'endTime'];
@@ -625,7 +652,7 @@
              inputsToWatch.forEach(id => {
                  const element = document.getElementById(id);
                  if (element) {
-                     // Adesso salva sul Cloud PRIMA di ricalcolare
+                     // Ricalcola e salva automaticamente dopo il cambio di un input
                      element.addEventListener('change', () => {
                          saveSchedule(); 
                          calculateSchedule();
@@ -639,6 +666,8 @@
              }
         }
         
+        // --- FUNZIONI DI STAMPA E CONDIVISIONE (lasciate invariate) ---
+
         function printSchedule() {
             const resultsDiv = document.getElementById('results');
             const scheduleTable = document.querySelector('#results .session-table');
@@ -678,7 +707,7 @@
                     .bg-blue-100 { background-color: #FEEAEA !important; padding: 10px; border: 1px solid #ccc;} 
 
                 </style>
-                <h1 style="color: #D8A7A7; text-align: center; font-size: 24px; margin-bottom: 20px;">Pianificatore Sportivo Giornaliero</h1>
+                <h1 style="color: var(--color-rose-accent); text-align: center; font-size: 24px; margin-bottom: 20px;">Pianificatore Sportivo Giornaliero</h1>
                 ${resultsDiv.innerHTML}
             </div>`;
 
@@ -713,7 +742,6 @@
 
             summary += `*🌟 Dettaglio Attività 🌟*\n`;
             
-            // Estrae il contenuto della tabella
             const rows = scheduleTable.querySelectorAll('tbody tr');
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
@@ -723,42 +751,34 @@
                     let end = cells[2].innerText.trim();
                     let duration = cells[3].innerText.trim();
                     
-                    // Formatta in modo compatto per WhatsApp
                     summary += `• ${start}-${end} | ${duration} | ${type}\n`;
                 }
             });
             
             summary += `\n*✨ Creato con il Pianificatore Sportivo Kawaii ✨*`;
 
-            // Codifica il testo per l'URL di WhatsApp
             const encodedText = encodeURIComponent(summary);
             
-            // Usa l'API di condivisione nativa se disponibile (migliore su mobile)
             if (navigator.share) {
-                // Leggero ritardo per permettere all'utente di leggere il messaggio di screenshot
                 setTimeout(() => {
                     navigator.share({
                         title: `Programma Sportivo del ${date}`,
                         text: summary
-                    }).then(() => {
-                        // showMessage('Programma condiviso con successo!', 'success'); // Commentato per non sovrapporsi al messaggio precedente
                     }).catch((error) => {
                         if (error.name !== 'AbortError') {
-                            // Fallback: apri il link web se la condivisione nativa fallisce
                             window.open(`https://wa.me/?text=${encodedText}`, '_blank');
                         }
                     });
                 }, 500);
 
             } else {
-                // Fallback per desktop o browser senza l'API di condivisione
                  setTimeout(() => {
                     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
                  }, 500);
             }
         }
 
-        // --- Logica di Calcolo Principale ---
+        // --- Logica di Calcolo Principale (Lasciata invariata) ---
 
         function calculateSchedule() {
             // 1. Dati di input e calcolo durata totale
@@ -774,15 +794,9 @@
             
             if (totalTrainingDuration <= 0) {
                  resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Per favore, inserisci una durata totale valida per l\'allenamento (maggiore di 0 minuti).</p>';
-                 if (actionButtons) actionButtons.classList.add('hidden'); // Nascondi se fallisce
+                 if (actionButtons) actionButtons.classList.add('hidden'); 
                 return;
             }
-
-            // Inizializza il salvataggio sul Cloud se il calcolo non è automatico
-            // Se calculateSchedule() è chiamato da un evento change, saveSchedule è già stata chiamata. 
-            // Se è chiamato dal pulsante 'Calcola', lo chiamo qui.
-            // Lo chiamo sempre per sicurezza, è asincrono e non blocca il calcolo.
-            saveSchedule(); 
 
             // 2. Unisce e Ordina TUTTE le pause (Fisse + Attive)
             const allBreaks = [];
@@ -849,7 +863,6 @@
                     endMinutes += (24 * 60); // Attraversamento mezzanotte
                 }
                 
-                // Limita la durata totale alla finestra temporale definita
                 const windowDuration = endMinutes - startMinutes;
                 if (totalTrainingDuration > windowDuration) {
                     showMessage(`Attenzione: La durata richiesta (${formatMinutesToHours(totalTrainingDuration)}) è maggiore della finestra temporale (${formatMinutesToHours(windowDuration)}). Verrà schedulato solo il tempo disponibile.`, 'warning');
@@ -858,9 +871,8 @@
                 planningConstraint = `Pianificazione vincolata dalle ${startTimeStr} alle ${endTimeStr}.`;
 
             } else if (startTimeStr || endTimeStr) {
-                // Se solo uno è impostato, è un errore nell'input in questa modalità
                  resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Per la pianificazione vincolata devi inserire SIA l\'Ora di Inizio che l\'Ora di Fine, oppure lasciare entrambi vuoti per la distribuzione libera.</p>';
-                 if (actionButtons) actionButtons.classList.add('hidden'); // Nascondi se fallisce
+                 if (actionButtons) actionButtons.classList.add('hidden'); 
                 return;
             } else {
                 planningConstraint = `Pianificazione libera: l\'allenamento inizierà dopo l'ultima pausa fissa/attiva più vicina al mattino.`;
@@ -938,7 +950,6 @@
 
             // 6. Blocco Finale di Allenamento (se c'è tempo rimanente)
             if (totalTrainingDuration > 0 && currentTrainingStartMinutes < endMinutes) {
-                // Calcola la durata massima possibile fino all'orario di fine definito (o mezzanotte)
                 const remainingSpace = endMinutes - currentTrainingStartMinutes;
                 const finalBlockDuration = Math.min(totalTrainingDuration, remainingSpace);
                 
@@ -974,12 +985,11 @@
             // 8. Riassunto e Renderizzazione
             const totalEffectiveTrainingMinutes = totalInitialDuration - totalTrainingDuration; 
             
-            // L'orario di fine programma è l'orario di fine dell'ultima attività effettivamente schedulata
             const finalActivityEnd = schedule.length > 0 ? schedule[schedule.length - 1].end : 'N/A';
             
             if (schedule.length === 0) {
                 resultsDiv.innerHTML = '<p class="text-red-500 font-semibold">Nessuna attività programmata. Controlla la durata dell\'allenamento e gli orari delle pause.</p>';
-                if (actionButtons) actionButtons.classList.add('hidden'); // Nascondi se fallisce
+                if (actionButtons) actionButtons.classList.add('hidden'); 
                 return;
             }
 
@@ -1010,7 +1020,7 @@
             `;
 
             schedule.forEach(item => {
-                const rowClass = item.classType || ''; // Usa la classe definita, altrimenti vuota
+                const rowClass = item.classType || ''; 
                 
                 htmlOutput += `
                     <tr class="${rowClass}">
